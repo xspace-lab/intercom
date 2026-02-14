@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskKeeper - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .demo-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #e8f4f8;
+            color: #0066cc;
+            font-size: 0.9em;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin: 0 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 TaskKeeper</h1>
+            <p>Your AI-powered task manager with Claude</p>
+            <div class="demo-badge">🎮 INTERACTIVE DEMO - No API Key Needed!</div>
+        </div>
+
+        <div class="chat-container">
+            <div class="quick-actions">
+                <button class="quick-action" onclick="sendQuickMessage('Show my tasks for today')">📋 Today's Tasks</button>
+                <button class="quick-action" onclick="sendQuickMessage('What do I have coming up this week?')">📅 This Week</button>
+                <button class="quick-action" onclick="sendQuickMessage('Remind me to call mom tomorrow at 2pm')">⏰ Add Reminder</button>
+                <button class="quick-action" onclick="sendQuickMessage('Add a task to review project proposal')">✅ New Task</button>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="message system">
+                    👋 Welcome to TaskKeeper! This is an interactive demo.
+                    <br><br>
+                    Try asking me to:
+                    <br>• Show your calendar
+                    <br>• Add tasks or reminders
+                    <br>• Set alarms
+                    <br>• Plan your day
+                    <br><br>
+                    (This demo simulates AI responses - the full version requires an API key)
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Try: 'Show my tasks' or 'Remind me to call mom at 2pm'..."
+                    onkeypress="if(event.key==='Enter') sendMessage()"
+                />
+                <button onclick="sendMessage()" id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const responses = {
+            'calendar': `📅 Here's what you have today:
+
+<strong>9:00 AM</strong> - Team standup meeting
+<strong>11:30 AM</strong> - Coffee with Sarah  
+<strong>2:00 PM</strong> - Project review
+<strong>4:30 PM</strong> - Gym session
+
+You have a well-balanced day ahead! Need me to add or change anything?`,
+
+            'week': `📅 Here's your week at a glance:
+
+<strong>Monday:</strong> Team meeting (9 AM), Lunch with client (12 PM)
+<strong>Tuesday:</strong> Project deadline (All day)
+<strong>Wednesday:</strong> Dentist appointment (2 PM)
+<strong>Thursday:</strong> Team happy hour (6 PM)
+<strong>Friday:</strong> Weekly review (3 PM)
+
+Looking like a productive week! Want me to add anything?`,
+
+            'reminder': `✅ Perfect! I've set a reminder for you to call mom tomorrow at 2:00 PM. I'll make sure you don't forget! 📞`,
+
+            'task': `🎯 Got it! I've added "Review project proposal" to your task list. When would you like to schedule time for this? I can block out 30-60 minutes on your calendar if you'd like!`,
+
+            'alarm': `⏰ All set! I've created a daily alarm for 7:00 AM every morning. You'll get a "Wake up!" notification to start your day. Sleep well! 😴`,
+
+            'timer': `⏲️ Starting a 25-minute timer for you now! Perfect for a Pomodoro session. I'll notify you when time's up. Stay focused! 💪`,
+
+            'help': `I can help you with:
+
+🗓️ <strong>Calendar</strong> - "Show my schedule" or "What's today look like?"
+✅ <strong>Tasks</strong> - "Add task to..." or "Create a to-do..."
+⏰ <strong>Reminders</strong> - "Remind me to..." or "Set a reminder..."
+⏰ <strong>Alarms</strong> - "Wake me up at 7am" or "Daily alarm..."
+⏲️ <strong>Timers</strong> - "Set a timer for 25 minutes"
+
+Just tell me naturally what you need!`,
+
+            'default': `I'd be happy to help with that! In the full version with an API key, I can:
+
+• Check your actual calendar
+• Create real reminders and events
+• Set device alarms
+• Manage your tasks
+
+For now, try these demo commands:
+- "Show my calendar"
+- "Remind me to call mom"
+- "Add a task"
+- "What's coming up this week?"`
+        };
+
+        function addMessage(content, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim().toLowerCase();
+
+            if (!input.value.trim()) return;
+
+            // Add user message
+            addMessage(input.value, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            // Show loading
+            addMessage('<span class="loading"></span><span class="loading"></span><span class="loading"></span>', 'assistant');
+            
+            // Simulate thinking delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Remove loading
+            const messages = document.getElementById('messages');
+            messages.removeChild(messages.lastChild);
+
+            // Determine response
+            let response;
+            if (message.includes('calendar') || message.includes('today') || message.includes('schedule')) {
+                response = responses.calendar;
+            } else if (message.includes('week')) {
+                response = responses.week;
+            } else if (message.includes('remind') || message.includes('reminder')) {
+                response = responses.reminder;
+            } else if (message.includes('task') || message.includes('add') || message.includes('create')) {
+                response = responses.task;
+            } else if (message.includes('alarm') || message.includes('wake')) {
+                response = responses.alarm;
+            } else if (message.includes('timer')) {
+                response = responses.timer;
+            } else if (message.includes('help') || message.includes('what can')) {
+                response = responses.help;
+            } else {
+                response = responses.default;
+            }
+
+            addMessage(response, 'assistant');
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        // Focus input on load
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>

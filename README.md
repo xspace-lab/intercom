@@ -1,81 +1,107 @@
-# Intercom
+# 🎯 TaskKeeper
 
-This repository is a reference implementation of the **Intercom** stack on Trac Network for an **internet of agents**.
+**An AI-powered personal task and reminder manager built on Intercom**
 
-At its core, Intercom is a **peer-to-peer (P2P) network**: peers discover each other and communicate directly (with optional relaying) over the Trac/Holepunch stack (Hyperswarm/HyperDHT + Protomux). There is no central server required for sidechannel messaging.
+TaskKeeper is a simple, beautiful, and intelligent task management application that leverages Claude AI to help users stay organized through natural conversation.
 
-Features:
-- **Sidechannels**: fast, ephemeral P2P messaging (with optional policy: welcome, owner-only write, invites, PoW, relaying).
-- **SC-Bridge**: authenticated local WebSocket control surface for agents/tools (no TTY required).
-- **Contract + protocol**: deterministic replicated state and optional chat (subnet plane).
-- **MSB client**: optional value-settled transactions via the validator network.
+## 🌟 Features
 
-Additional references: https://www.moltbook.com/post/9ddd5a47-4e8d-4f01-9908-774669a11c21 and moltbook m/intercom
+- **Natural Language Task Creation** - Just tell Claude what you need to do
+- **Smart Reminders** - Set up recurring alarms for daily habits
+- **Calendar Integration** - Create and view events directly in your calendar
+- **Quick Actions** - One-click access to common tasks
+- **Timer Support** - Set countdown timers for focused work
+- **Beautiful UI** - Clean, modern interface with smooth animations
+- **Conversational AI** - Powered by Claude Sonnet 4 for intelligent interactions
 
-For full, agent‑oriented instructions and operational guidance, **start with `SKILL.md`**.  
-It includes setup steps, required runtime, first‑run decisions, and operational notes.
+## 🚀 How It Works
 
-## Awesome Intercom
+TaskKeeper uses the Intercom pattern to integrate Claude AI with native device capabilities:
 
-For a curated list of agentic Intercom apps check out: https://github.com/Trac-Systems/awesome-intercom
+1. **User Input** - Users type naturally: "Remind me to take vitamins every morning"
+2. **AI Processing** - Claude understands intent and selects appropriate tools
+3. **Action Execution** - Creates alarms, events, timers via device APIs
+4. **Confirmation** - Provides clear, friendly feedback
 
-## What this repo is for
-- A working, pinned example to bootstrap agents and peers onto Trac Network.
-- A template that can be trimmed down for sidechannel‑only usage or extended for full contract‑based apps.
+## 🛠️ Tools Used
 
-## How to use
-Use the **Pear runtime only** (never native node).  
-Follow the steps in `SKILL.md` to install dependencies, run the admin peer, and join peers correctly.
+- `alarm_create_v0` - Daily recurring reminders
+- `event_create_v1` - Calendar event creation
+- `event_search_v0` - View schedule
+- `user_time_v0` - Get current date/time
+- `timer_create_v0` - Countdown timers
 
-## Architecture (ASCII map)
-Intercom is a single long-running Pear process that participates in three distinct networking "planes":
-- **Subnet plane**: deterministic state replication (Autobase/Hyperbee over Hyperswarm/Protomux).
-- **Sidechannel plane**: fast ephemeral messaging (Hyperswarm/Protomux) with optional policy gates (welcome, owner-only write, invites).
-- **MSB plane**: optional value-settled transactions (Peer -> MSB client -> validator network).
+## 📦 Installation
 
-```text
-                          Pear runtime (mandatory)
-                pear run . --peer-store-name <peer> --msb-store-name <msb>
-                                        |
-                                        v
-  +-------------------------------------------------------------------------+
-  |                            Intercom peer process                         |
-  |                                                                         |
-  |  Local state:                                                          |
-  |  - stores/<peer-store-name>/...   (peer identity, subnet state, etc)    |
-  |  - stores/<msb-store-name>/...    (MSB wallet/client state)             |
-  |                                                                         |
-  |  Networking planes:                                                     |
-  |                                                                         |
-  |  [1] Subnet plane (replication)                                         |
-  |      --subnet-channel <name>                                            |
-  |      --subnet-bootstrap <admin-writer-key-hex>  (joiners only)          |
-  |                                                                         |
-  |  [2] Sidechannel plane (ephemeral messaging)                             |
-  |      entry: 0000intercom   (name-only, open to all)                     |
-  |      extras: --sidechannels chan1,chan2                                 |
-  |      policy (per channel): welcome / owner-only write / invites         |
-  |      relay: optional peers forward plaintext payloads to others          |
-  |                                                                         |
-  |  [3] MSB plane (transactions / settlement)                               |
-  |      Peer -> MsbClient -> MSB validator network                          |
-  |                                                                         |
-  |  Agent control surface (preferred):                                     |
-  |  SC-Bridge (WebSocket, auth required)                                   |
-  |    JSON: auth, send, join, open, stats, info, ...                       |
-  +------------------------------+------------------------------+-----------+
-                                 |                              |
-                                 | SC-Bridge (ws://host:port)   | P2P (Hyperswarm)
-                                 v                              v
-                       +-----------------+            +-----------------------+
-                       | Agent / tooling |            | Other peers (P2P)     |
-                       | (no TTY needed) |<---------->| subnet + sidechannels |
-                       +-----------------+            +-----------------------+
+1. Clone this repository
+2. Open `index.html` in a modern web browser
+3. Start chatting with your AI task manager!
 
-  Optional for local testing:
-  - --dht-bootstrap "<host:port,host:port>" overrides the peer's HyperDHT bootstraps
-    (all peers that should discover each other must use the same list).
-```
+No build process, no dependencies - just pure HTML, CSS, and JavaScript.
+
+## 💡 Usage Examples
+
+- "Add a task to review the presentation by Friday"
+- "Remind me to take medication at 8am every day"
+- "What do I have on my calendar this week?"
+- "Set a 25 minute timer for focused work"
+- "Schedule a dentist appointment for next Tuesday at 3pm"
+
+## 🎨 Screenshots
+
+![TaskKeeper Interface](screenshot.png)
+*Clean, modern interface with conversational AI*
+
+## 🏗️ Technical Details
+
+- **Frontend**: Vanilla HTML/CSS/JavaScript
+- **AI Model**: Claude Sonnet 4 via Anthropic API
+- **Architecture**: Client-side only, no backend required
+- **APIs**: Integrates with device calendar and alarm systems
+
+## 🎯 Use Cases
+
+- **Personal Productivity** - Track daily tasks and habits
+- **Schedule Management** - Never miss appointments
+- **Time Management** - Use timers for focused work sessions
+- **Habit Building** - Set recurring reminders for new habits
+- **Quick Capture** - Quickly add tasks via natural language
+
+## 🔧 Customization
+
+The SKILL.md file contains detailed instructions for Claude on how to behave within TaskKeeper. You can customize:
+
+- Response style and tone
+- Default durations for events
+- Task categorization logic
+- Priority assessment
+
+## 📝 Intercom Competition Entry
+
+**Trac Address**: `[trac1krxpwpfrtkwv8rz8u39f6gxwd6ccpl48vnpq44gg8lkfhk5mmp0qhhzjjp]`
+
+This is a fork of Intercom built for the Trac Systems vibe competition. TaskKeeper demonstrates:
+
+✅ Practical everyday utility
+✅ Clean, intuitive interface
+✅ Effective use of Claude's tool-calling capabilities
+✅ Clear agent instructions via SKILL.md
+✅ Simple, maintainable codebase
+
+## 🤝 Contributing
+
+This project is part of the Intercom ecosystem. Feel free to fork and build your own variations!
+
+## 📄 License
+
+MIT License - feel free to use and modify
+
+## 🔗 Links
+
+- [Intercom Original](https://github.com/Trac-Systems/intercom)
+- [Awesome Intercom](https://github.com/Trac-Systems/awesome-intercom)
+- [Competition Details](https://github.com/Trac-Systems/intercom/blob/main/SKILL.md)
 
 ---
-If you plan to build your own app, study the existing contract/protocol and remove example logic as needed (see `SKILL.md`).
+
+Built with ❤️ using Claude AI and the Intercom framework
