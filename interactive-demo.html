@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodTracker - Your Mental Wellness Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        .demo-badge {
+            background: #48bb78;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .mood-selector {
+            margin-bottom: 20px;
+        }
+
+        .mood-selector h3 {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .mood-btn {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.05);
+            border-color: #a8edea;
+        }
+
+        .mood-btn.selected {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .stats-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stats-card h4 {
+            font-size: 0.9em;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .stats-card .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: #f7fafc;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            color: #2d3748;
+        }
+
+        .quick-action:hover {
+            background: #a8edea;
+            color: #2d3748;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #a8edea 0%, #89d4cf 100%);
+            color: #2d3748;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #fff5f5;
+            color: #c53030;
+            font-size: 0.9em;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area textarea {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: inherit;
+            resize: none;
+            min-height: 50px;
+        }
+
+        .input-area textarea:focus {
+            border-color: #a8edea;
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #a8edea 0%, #89d4cf 100%);
+            color: #2d3748;
+            border: none;
+            border-radius: 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 237, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #a8edea;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin: 0 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .mood-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 2px;
+        }
+
+        .mood-great { background: #c6f6d5; color: #22543d; }
+        .mood-good { background: #bee3f8; color: #2c5282; }
+        .mood-okay { background: #feebc8; color: #7c2d12; }
+        .mood-sad { background: #fed7d7; color: #742a2a; }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌸 MoodTracker</h1>
+            <p>Your AI-powered mental wellness companion</p>
+            <div class="demo-badge">✨ INTERACTIVE DEMO</div>
+        </div>
+
+        <div class="main-layout">
+            <div class="sidebar">
+                <div class="mood-selector">
+                    <h3>How are you feeling?</h3>
+                    <div class="mood-grid">
+                        <button class="mood-btn" onclick="selectMood('😊', 'great')" title="Great">😊</button>
+                        <button class="mood-btn" onclick="selectMood('😌', 'good')" title="Good">😌</button>
+                        <button class="mood-btn" onclick="selectMood('🙂', 'okay')" title="Okay">🙂</button>
+                        <button class="mood-btn" onclick="selectMood('😐', 'meh')" title="Meh">😐</button>
+                        <button class="mood-btn" onclick="selectMood('😔', 'sad')" title="Sad">😔</button>
+                        <button class="mood-btn" onclick="selectMood('😰', 'anxious')" title="Anxious">😰</button>
+                        <button class="mood-btn" onclick="selectMood('😤', 'frustrated')" title="Frustrated">😤</button>
+                        <button class="mood-btn" onclick="selectMood('😴', 'tired')" title="Tired">😴</button>
+                        <button class="mood-btn" onclick="selectMood('🤗', 'grateful')" title="Grateful">🤗</button>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h4>Current Streak</h4>
+                    <div class="value">7 days 🔥</div>
+                </div>
+
+                <div class="stats-card">
+                    <h4>This Week</h4>
+                    <div class="value">5 check-ins ✓</div>
+                </div>
+
+                <div class="stats-card">
+                    <h4>Most Common</h4>
+                    <div class="value">😊 Great</div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="sendQuickMessage('I want to journal about my day')">📝 Journal</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Show me my mood patterns')">📊 Patterns</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Give me a breathing exercise')">🧘 Exercise</button>
+                    <button class="quick-action" onclick="sendQuickMessage('I need some encouragement')">💪 Encourage</button>
+                </div>
+
+                <div class="messages" id="messages">
+                    <div class="message assistant">
+                        🌸 Welcome to MoodTracker! I'm here to support your mental wellness journey.
+                        <br><br>
+                        You can:
+                        <br>• Track your mood daily
+                        <br>• Journal your thoughts
+                        <br>• Get insights on patterns
+                        <br>• Practice mindfulness exercises
+                        <br>• Receive personalized support
+                        <br><br>
+                        How are you feeling today? Click a mood above or tell me about it!
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <textarea 
+                        id="userInput" 
+                        placeholder="Share how you're feeling, journal your thoughts, or ask for guidance..."
+                        onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                        rows="2"
+                    ></textarea>
+                    <button onclick="sendMessage()" id="sendBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMood = null;
+        let moodHistory = [];
+
+        const responses = {
+            'journal': `📝 I'd love to hear about your day! Take your time and share:
+
+• What happened today that stood out?
+• How did it make you feel?
+• What are you grateful for?
+• Any challenges you faced?
+
+Writing helps us process emotions and gain clarity. I'm here to listen without judgment.`,
+
+            'patterns': `📊 Based on your recent mood tracking:
+
+<strong>Weekly Overview:</strong>
+Mon: <span class="mood-badge mood-great">😊 Great</span>
+Tue: <span class="mood-badge mood-good">😌 Good</span>
+Wed: <span class="mood-badge mood-great">😊 Great</span>
+Thu: <span class="mood-badge mood-okay">🙂 Okay</span>
+Fri: <span class="mood-badge mood-great">😊 Great</span>
+
+<strong>Insights:</strong>
+✨ You've been feeling mostly positive this week!
+🌅 Your mood is best in the mornings
+📈 You're on a 7-day tracking streak
+
+<strong>Recommendations:</strong>
+Keep doing what you're doing! Your consistency is paying off. Consider what Thursday's challenges were and how you overcame them.`,
+
+            'breathing': `🧘 Let's do a simple breathing exercise together:
+
+<strong>4-7-8 Breathing Technique:</strong>
+
+1️⃣ Breathe in through your nose for 4 seconds
+2️⃣ Hold your breath for 7 seconds
+3️⃣ Exhale slowly through your mouth for 8 seconds
+
+Repeat this cycle 4 times.
+
+This activates your parasympathetic nervous system and helps reduce stress and anxiety. How do you feel after trying it?`,
+
+            'encourage': `💪 You've got this!
+
+Remember:
+✨ You've overcome 100% of your worst days
+🌱 Growth happens outside your comfort zone
+💝 You're doing better than you think
+🌟 Every small step forward counts
+
+Your 7-day streak shows your commitment to yourself. That's something to be proud of! What's one thing you accomplished today, no matter how small?`,
+
+            'anxious': `I hear that you're feeling anxious. That's completely valid, and I'm glad you're acknowledging it. 💙
+
+Let's try some grounding:
+1. Name 5 things you can see
+2. Name 4 things you can touch
+3. Name 3 things you can hear
+4. Name 2 things you can smell
+5. Name 1 thing you can taste
+
+This 5-4-3-2-1 technique can help bring you back to the present moment. Would you like to try it, or would talking about what's making you anxious help more?`,
+
+            'sad': `I'm sorry you're feeling sad right now. 💙 It's okay to not be okay sometimes.
+
+Here's what might help:
+🤗 Reach out to someone you trust
+🚶 Take a gentle walk if you can
+💧 Stay hydrated
+📝 Write down your feelings
+🎵 Listen to music that resonates
+
+Would you like to talk about what's on your mind? Sometimes just expressing it can help lighten the load.`,
+
+            'grateful': `🤗 That's wonderful! Gratitude is such a powerful practice.
+
+What are you feeling grateful for today? Some prompts:
+• A person who made you smile
+• Something small that brought you joy
+• An opportunity you have
+• A challenge that taught you something
+• Your own progress or resilience
+
+Sharing gratitude amplifies its positive effects. I'd love to hear what's in your heart!`,
+
+            'default': `I'm here to support you! 🌸
+
+You can:
+• Share how you're feeling (click a mood or describe it)
+• Journal about your day
+• Ask for coping strategies
+• Request a mindfulness exercise
+• Review your mood patterns
+• Just chat - sometimes that's all we need
+
+What would be most helpful for you right now?`
+        };
+
+        function addMessage(content, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        function selectMood(emoji, mood) {
+            currentMood = { emoji, mood };
+            
+            // Visual feedback
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            
+            // Add to history
+            moodHistory.push({ emoji, mood, time: new Date() });
+            
+            // Auto-send mood update
+            const input = document.getElementById('userInput');
+            input.value = `I'm feeling ${mood} ${emoji}`;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim().toLowerCase();
+
+            if (!input.value.trim()) return;
+
+            // Add user message
+            addMessage(input.value.trim(), 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            // Show loading
+            addMessage('<span class="loading"></span><span class="loading"></span><span class="loading"></span>', 'assistant');
+            
+            // Simulate thinking delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Remove loading
+            const messages = document.getElementById('messages');
+            messages.removeChild(messages.lastChild);
+
+            // Determine response
+            let response;
+            if (message.includes('journal') || message.includes('write') || message.includes('my day')) {
+                response = responses.journal;
+            } else if (message.includes('pattern') || message.includes('trend') || message.includes('history')) {
+                response = responses.patterns;
+            } else if (message.includes('breath') || message.includes('meditat') || message.includes('exercise') || message.includes('calm')) {
+                response = responses.breathing;
+            } else if (message.includes('encourage') || message.includes('motivation') || message.includes('support')) {
+                response = responses.encourage;
+            } else if (message.includes('anxious') || message.includes('anxiety') || message.includes('worried') || message.includes('stress')) {
+                response = responses.anxious;
+            } else if (message.includes('sad') || message.includes('down') || message.includes('depressed') || message.includes('cry')) {
+                response = responses.sad;
+            } else if (message.includes('grateful') || message.includes('thankful') || message.includes('appreciate') || message.includes('blessing')) {
+                response = responses.grateful;
+            } else if (message.includes('feeling')) {
+                // Acknowledge mood
+                response = `Thank you for sharing that with me. 💙 Recognizing and naming our emotions is an important step in understanding ourselves better.
+
+Would you like to:
+• Journal about what led to this feeling?
+• Explore coping strategies?
+• Practice a mindfulness exercise?
+• Just talk about it?
+
+I'm here for whatever you need.`;
+            } else {
+                response = responses.default;
+            }
+
+            addMessage(response, 'assistant');
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        // Focus input on load
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>
