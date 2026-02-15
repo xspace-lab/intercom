@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoPortfolio - AI Trading Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .portfolio-sidebar {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .portfolio-value {
+            text-align: center;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .portfolio-value h3 {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .portfolio-value .amount {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .portfolio-value .change {
+            font-size: 1em;
+            margin-top: 5px;
+        }
+
+        .change.positive { color: #10b981; }
+        .change.negative { color: #ef4444; }
+
+        .holdings {
+            margin-bottom: 20px;
+        }
+
+        .holdings h3 {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .holding-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .holding-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .holding-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .coin-icon {
+            font-size: 1.8em;
+        }
+
+        .coin-details h4 {
+            font-size: 1em;
+            margin-bottom: 3px;
+        }
+
+        .coin-details p {
+            font-size: 0.85em;
+            opacity: 0.7;
+        }
+
+        .holding-value {
+            text-align: right;
+        }
+
+        .holding-value .price {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .holding-value .change-percent {
+            font-size: 0.85em;
+        }
+
+        .quick-stats {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item h4 {
+            font-size: 0.85em;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .chat-container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .quick-action:hover {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
+            color: white;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .message.system {
+            align-self: center;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            font-size: 0.9em;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .input-area input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .input-area input:focus {
+            border-color: #10b981;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin: 0 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 CryptoPortfolio</h1>
+            <p>AI-Powered Crypto Trading Assistant with IntercomSwap</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="portfolio-sidebar">
+                <div class="portfolio-value">
+                    <h3>Total Portfolio Value</h3>
+                    <div class="amount" id="totalValue">$12,458.32</div>
+                    <div class="change positive" id="totalChange">+$1,243.12 (+11.07%) 24h</div>
+                </div>
+
+                <div class="holdings">
+                    <h3>Your Holdings</h3>
+                    
+                    <div class="holding-item" onclick="selectCoin('BTC')">
+                        <div class="holding-info">
+                            <div class="coin-icon">₿</div>
+                            <div class="coin-details">
+                                <h4>Bitcoin</h4>
+                                <p id="btc-amount">0.125 BTC</p>
+                            </div>
+                        </div>
+                        <div class="holding-value">
+                            <div class="price" id="btc-value">$5,241.50</div>
+                            <div class="change-percent positive" id="btc-change">+3.2%</div>
+                        </div>
+                    </div>
+
+                    <div class="holding-item" onclick="selectCoin('ETH')">
+                        <div class="holding-info">
+                            <div class="coin-icon">Ξ</div>
+                            <div class="coin-details">
+                                <h4>Ethereum</h4>
+                                <p id="eth-amount">2.5 ETH</p>
+                            </div>
+                        </div>
+                        <div class="holding-value">
+                            <div class="price" id="eth-value">$4,125.00</div>
+                            <div class="change-percent positive" id="eth-change">+5.8%</div>
+                        </div>
+                    </div>
+
+                    <div class="holding-item" onclick="selectCoin('SOL')">
+                        <div class="holding-info">
+                            <div class="coin-icon">◎</div>
+                            <div class="coin-details">
+                                <h4>Solana</h4>
+                                <p id="sol-amount">15 SOL</p>
+                            </div>
+                        </div>
+                        <div class="holding-value">
+                            <div class="price" id="sol-value">$1,875.00</div>
+                            <div class="change-percent negative" id="sol-change">-2.1%</div>
+                        </div>
+                    </div>
+
+                    <div class="holding-item" onclick="selectCoin('AVAX')">
+                        <div class="holding-info">
+                            <div class="coin-icon">🔺</div>
+                            <div class="coin-details">
+                                <h4>Avalanche</h4>
+                                <p id="avax-amount">25 AVAX</p>
+                            </div>
+                        </div>
+                        <div class="holding-value">
+                            <div class="price" id="avax-value">$1,216.82</div>
+                            <div class="change-percent positive" id="avax-change">+8.4%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <h4>Best Performer</h4>
+                        <div class="value" style="color: #10b981;">AVAX +8.4%</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Total Assets</h4>
+                        <div class="value">4</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>24h Volume</h4>
+                        <div class="value">$2.4K</div>
+                    </div>
+                    <div class="stat-item">
+                        <h4>Profit/Loss</h4>
+                        <div class="value" style="color: #10b981;">+$1,243</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="sendQuickMessage('Analyze my portfolio performance')">📊 Analysis</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Should I buy more ETH?')">💡 Buy Signal</button>
+                    <button class="quick-action" onclick="sendQuickMessage('What are the market trends today?')">📈 Trends</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Swap 0.5 ETH to BTC')">🔄 Swap</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Set price alert for SOL at $130')">🔔 Alert</button>
+                </div>
+
+                <div class="messages" id="messages">
+                    <div class="message assistant">
+                        💰 Welcome to CryptoPortfolio! I'm your AI trading assistant powered by Claude.
+                        <br><br>
+                        I can help you:
+                        <br>• Track and analyze your crypto holdings
+                        <br>• Get real-time market insights
+                        <br>• Suggest optimal buy/sell timing
+                        <br>• Execute swaps via IntercomSwap
+                        <br>• Set price alerts
+                        <br>• Analyze market trends
+                        <br><br>
+                        Your portfolio is looking good with +11.07% gains! What would you like to know?
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <input 
+                        type="text" 
+                        id="userInput" 
+                        placeholder="Ask about your portfolio, market analysis, or execute a swap..."
+                        onkeypress="if(event.key==='Enter') sendMessage()"
+                    />
+                    <button onclick="sendMessage()" id="sendBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ADD YOUR ANTHROPIC API KEY HERE
+        const API_KEY = 'YOUR_API_KEY_HERE'; // Get from https://console.anthropic.com
+        
+        const API_URL = 'https://api.anthropic.com/v1/messages';
+        const conversationHistory = [];
+
+        // Portfolio data (in production, this would come from API/blockchain)
+        const portfolio = {
+            BTC: { amount: 0.125, value: 5241.50, price: 41932, change: 3.2, icon: '₿' },
+            ETH: { amount: 2.5, value: 4125.00, price: 1650, change: 5.8, icon: 'Ξ' },
+            SOL: { amount: 15, value: 1875.00, price: 125, change: -2.1, icon: '◎' },
+            AVAX: { amount: 25, value: 1216.82, price: 48.67, change: 8.4, icon: '🔺' }
+        };
+
+        function addMessage(content, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        function selectCoin(coin) {
+            const input = document.getElementById('userInput');
+            input.value = `Tell me about my ${coin} holdings`;
+            sendMessage();
+        }
+
+        function getPortfolioContext() {
+            const totalValue = Object.values(portfolio).reduce((sum, coin) => sum + coin.value, 0);
+            const totalChange = Object.values(portfolio).reduce((sum, coin) => sum + (coin.value * coin.change / 100), 0);
+            const changePercent = (totalChange / (totalValue - totalChange)) * 100;
+
+            return `
+Current Portfolio:
+- Total Value: $${totalValue.toFixed(2)}
+- 24h Change: $${totalChange.toFixed(2)} (${changePercent.toFixed(2)}%)
+
+Holdings:
+- Bitcoin (BTC): ${portfolio.BTC.amount} BTC @ $${portfolio.BTC.price} = $${portfolio.BTC.value} (${portfolio.BTC.change > 0 ? '+' : ''}${portfolio.BTC.change}% 24h)
+- Ethereum (ETH): ${portfolio.ETH.amount} ETH @ $${portfolio.ETH.price} = $${portfolio.ETH.value} (${portfolio.ETH.change > 0 ? '+' : ''}${portfolio.ETH.change}% 24h)
+- Solana (SOL): ${portfolio.SOL.amount} SOL @ $${portfolio.SOL.price} = $${portfolio.SOL.value} (${portfolio.SOL.change > 0 ? '+' : ''}${portfolio.SOL.change}% 24h)
+- Avalanche (AVAX): ${portfolio.AVAX.amount} AVAX @ $${portfolio.AVAX.price} = $${portfolio.AVAX.value} (${portfolio.AVAX.change > 0 ? '+' : ''}${portfolio.AVAX.change}% 24h)
+
+Best Performer: AVAX (${portfolio.AVAX.change > 0 ? '+' : ''}${portfolio.AVAX.change}%)
+`;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            addMessage('<span class="loading"></span><span class="loading"></span><span class="loading"></span>', 'assistant');
+
+            conversationHistory.push({
+                role: 'user',
+                content: message
+            });
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 1500,
+                        system: `You are CryptoPortfolio's AI trading assistant - an expert crypto analyst helping users manage their portfolio and make informed trading decisions.
+
+Your capabilities:
+1. Portfolio Analysis - Analyze holdings, performance, and allocation
+2. Market Intelligence - Provide trends, sentiment, and news analysis
+3. Trading Signals - Give buy/sell recommendations with technical analysis
+4. IntercomSwap Integration - Help execute token swaps
+5. Price Alerts - Set up notifications for target prices
+6. Risk Management - Suggest position sizing and stop-losses
+
+CRITICAL GUIDELINES:
+✅ Base all recommendations on data and technical indicators (RSI, MACD, support/resistance)
+✅ Always include risk disclaimers - crypto is volatile, past performance ≠ future results
+✅ Explain the "why" behind every recommendation
+✅ For swap requests, show clear preview with fees, slippage, and portfolio impact
+✅ Never guarantee profits or make promises
+✅ Use visual formatting (emojis, bold, structure) for clarity
+✅ Be educational - teach users about indicators and concepts
+
+SWAP EXECUTION FLOW:
+When user requests a swap (e.g., "Swap 0.5 ETH to BTC"):
+1. Calculate amounts and fees
+2. Show exchange rate
+3. Display routing (ETH → USDC → BTC via IntercomSwap)
+4. Show before/after portfolio allocation
+5. Note impact (increasing BTC exposure, etc.)
+6. Ask for confirmation ("Reply 'confirm swap' to execute")
+7. NEVER execute without explicit confirmation
+
+RISK DISCLAIMER TEMPLATE:
+"⚠️ Remember: Crypto trading is highly volatile. Only invest what you can afford to lose. This is analysis, not financial advice."
+
+Current User Portfolio:
+${getPortfolioContext()}
+
+Use emojis: 📊 (analysis), 💡 (signals), 📈 (trends), 🔄 (swaps), 🔔 (alerts), ⚠️ (warnings), ✅ (confirmations)`,
+                        messages: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                const messages = document.getElementById('messages');
+                messages.removeChild(messages.lastChild);
+
+                let assistantMessage = '';
+                if (data.content) {
+                    for (const block of data.content) {
+                        if (block.type === 'text') {
+                            assistantMessage += block.text;
+                        }
+                    }
+                }
+
+                if (assistantMessage) {
+                    addMessage(assistantMessage, 'assistant');
+                    conversationHistory.push({
+                        role: 'assistant',
+                        content: data.content
+                    });
+                } else {
+                    addMessage('How can I help you with your portfolio? 💰', 'assistant');
+                }
+
+            } catch (error) {
+                const messages = document.getElementById('messages');
+                messages.removeChild(messages.lastChild);
+                
+                addMessage(`Error: ${error.message}. Please add your API key at the top of index.html where it says 'YOUR_API_KEY_HERE'.`, 'system');
+                conversationHistory.pop();
+            }
+
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        document.getElementById('userInput').focus();
+
+        if (API_KEY === 'YOUR_API_KEY_HERE') {
+            console.warn('⚠️ Please add your Anthropic API key!');
+            console.log('Get your key from: https://console.anthropic.com');
+        }
+    </script>
+</body>
+</html>

@@ -1,81 +1,250 @@
-# Intercom
+# 💰 CryptoPortfolio
 
-This repository is a reference implementation of the **Intercom** stack on Trac Network for an **internet of agents**.
+**AI-Powered Crypto Trading Assistant built on IntercomSwap**
 
-At its core, Intercom is a **peer-to-peer (P2P) network**: peers discover each other and communicate directly (with optional relaying) over the Trac/Holepunch stack (Hyperswarm/HyperDHT + Protomux). There is no central server required for sidechannel messaging.
+CryptoPortfolio combines AI intelligence with IntercomSwap's trading capabilities to help you track, analyze, and optimize your cryptocurrency investments through natural conversation with Claude.
 
-Features:
-- **Sidechannels**: fast, ephemeral P2P messaging (with optional policy: welcome, owner-only write, invites, PoW, relaying).
-- **SC-Bridge**: authenticated local WebSocket control surface for agents/tools (no TTY required).
-- **Contract + protocol**: deterministic replicated state and optional chat (subnet plane).
-- **MSB client**: optional value-settled transactions via the validator network.
+## 🌟 Features
 
-Additional references: https://www.moltbook.com/post/9ddd5a47-4e8d-4f01-9908-774669a11c21 and moltbook m/intercom
+- **Live Portfolio Tracking** - Real-time value and performance monitoring
+- **AI Market Analysis** - Claude analyzes trends and provides insights
+- **Smart Buy/Sell Signals** - Get data-driven trading recommendations
+- **One-Click Token Swaps** - Execute trades via IntercomSwap integration
+- **Price Alerts** - Set notifications for target prices
+- **Portfolio Analytics** - Understand your asset allocation and performance
+- **Technical Indicators** - RSI, MACD, support/resistance levels
+- **Market Sentiment** - Fear & Greed index, news impact analysis
+- **Beautiful Dashboard** - Glassmorphic design with live stats
 
-For full, agent‑oriented instructions and operational guidance, **start with `SKILL.md`**.  
-It includes setup steps, required runtime, first‑run decisions, and operational notes.
+## 🎯 Why CryptoPortfolio?
 
-## Awesome Intercom
+Trading crypto is overwhelming. CryptoPortfolio makes it simple:
 
-For a curated list of agentic Intercom apps check out: https://github.com/Trac-Systems/awesome-intercom
+✨ **AI-Powered Insights** - Ask questions in plain English, get expert analysis
+📊 **Data-Driven Decisions** - Technical analysis without the complexity  
+🔄 **Seamless Swaps** - Execute trades through natural conversation
+⚡ **Real-Time Updates** - Track your portfolio performance 24/7
+🎨 **Intuitive Interface** - Beautiful design that makes sense
+🤖 **Always Learning** - Claude adapts to your trading style
 
-## What this repo is for
-- A working, pinned example to bootstrap agents and peers onto Trac Network.
-- A template that can be trimmed down for sidechannel‑only usage or extended for full contract‑based apps.
+## 🛠️ Built on IntercomSwap
 
-## How to use
-Use the **Pear runtime only** (never native node).  
-Follow the steps in `SKILL.md` to install dependencies, run the admin peer, and join peers correctly.
+IntercomSwap Integration Features:
+- Direct token swap execution
+- Multi-route optimization for best prices
+- Low slippage tolerance
+- Gas fee estimation
+- Transaction preview before execution
 
-## Architecture (ASCII map)
-Intercom is a single long-running Pear process that participates in three distinct networking "planes":
-- **Subnet plane**: deterministic state replication (Autobase/Hyperbee over Hyperswarm/Protomux).
-- **Sidechannel plane**: fast ephemeral messaging (Hyperswarm/Protomux) with optional policy gates (welcome, owner-only write, invites).
-- **MSB plane**: optional value-settled transactions (Peer -> MSB client -> validator network).
+## 📦 Installation
 
-```text
-                          Pear runtime (mandatory)
-                pear run . --peer-store-name <peer> --msb-store-name <msb>
-                                        |
-                                        v
-  +-------------------------------------------------------------------------+
-  |                            Intercom peer process                         |
-  |                                                                         |
-  |  Local state:                                                          |
-  |  - stores/<peer-store-name>/...   (peer identity, subnet state, etc)    |
-  |  - stores/<msb-store-name>/...    (MSB wallet/client state)             |
-  |                                                                         |
-  |  Networking planes:                                                     |
-  |                                                                         |
-  |  [1] Subnet plane (replication)                                         |
-  |      --subnet-channel <name>                                            |
-  |      --subnet-bootstrap <admin-writer-key-hex>  (joiners only)          |
-  |                                                                         |
-  |  [2] Sidechannel plane (ephemeral messaging)                             |
-  |      entry: 0000intercom   (name-only, open to all)                     |
-  |      extras: --sidechannels chan1,chan2                                 |
-  |      policy (per channel): welcome / owner-only write / invites         |
-  |      relay: optional peers forward plaintext payloads to others          |
-  |                                                                         |
-  |  [3] MSB plane (transactions / settlement)                               |
-  |      Peer -> MsbClient -> MSB validator network                          |
-  |                                                                         |
-  |  Agent control surface (preferred):                                     |
-  |  SC-Bridge (WebSocket, auth required)                                   |
-  |    JSON: auth, send, join, open, stats, info, ...                       |
-  +------------------------------+------------------------------+-----------+
-                                 |                              |
-                                 | SC-Bridge (ws://host:port)   | P2P (Hyperswarm)
-                                 v                              v
-                       +-----------------+            +-----------------------+
-                       | Agent / tooling |            | Other peers (P2P)     |
-                       | (no TTY needed) |<---------->| subnet + sidechannels |
-                       +-----------------+            +-----------------------+
+1. Clone this repository
+2. Open `interactive-demo.html` in any browser - works immediately!
+3. For full AI integration with real swaps, use `index.html` with your Anthropic API key
 
-  Optional for local testing:
-  - --dht-bootstrap "<host:port,host:port>" overrides the peer's HyperDHT bootstraps
-    (all peers that should discover each other must use the same list).
+No build process, no dependencies - just pure HTML, CSS, and JavaScript.
+
+## 💡 Usage Examples
+
+**Portfolio Analysis:**
+- "Analyze my portfolio performance"
+- "What's my best performing asset?"
+- "Show me my profit and loss"
+
+**Trading Signals:**
+- "Should I buy more ETH?"
+- "Is now a good time to sell SOL?"
+- "Give me a buy signal for BTC"
+
+**Market Intelligence:**
+- "What are the market trends today?"
+- "Explain the current crypto sentiment"
+- "What's moving the market?"
+
+**Execute Swaps:**
+- "Swap 0.5 ETH to BTC"
+- "Exchange 100 USDC for SOL"
+- "Trade all my AVAX for ETH"
+
+**Price Alerts:**
+- "Alert me when BTC hits $45,000"
+- "Notify me if SOL drops below $120"
+- "Set a price target alert for ETH at $1,800"
+
+**Deep Dives:**
+- Click any coin in sidebar for detailed analysis
+- "Tell me about Bitcoin fundamentals"
+- "What's happening with Ethereum?"
+
+## 🎨 Interface Components
+
+### Portfolio Sidebar
+- **Total Value Display** - Live portfolio worth
+- **24h Change** - Gains/losses in dollars and percentage
+- **Holdings List** - All your assets with icons and values
+- **Quick Stats** - Best performer, total assets, volume, P/L
+
+### AI Chat Interface
+- **Quick Actions** - One-click shortcuts for common tasks
+- **Natural Conversation** - Ask anything about your crypto
+- **Visual Data** - Charts, badges, formatted responses
+- **Smart Suggestions** - Context-aware recommendations
+
+### Live Features
+- Color-coded gains (green) and losses (red)
+- Animated message transitions
+- Responsive design for mobile trading
+- Glassmorphic aesthetic with blur effects
+
+## 📊 What Claude Provides
+
+### Portfolio Analysis
+```
+• Overall performance metrics
+• Asset allocation breakdown
+• Best/worst performers
+• Diversification score
+• Rebalancing suggestions
 ```
 
+### Technical Analysis
+```
+• RSI (Relative Strength Index)
+• MACD (Moving Average Convergence Divergence)
+• Support and resistance levels
+• Volume analysis
+• Trend identification
+```
+
+### Market Sentiment
+```
+• Fear & Greed Index
+• Social sentiment analysis
+• News impact assessment
+• Institutional activity
+• On-chain metrics
+```
+
+### Trading Recommendations
+```
+• Buy/Sell/Hold signals
+• Entry/exit points
+• Risk assessment
+• Position sizing
+• Stop-loss suggestions
+```
+
+## 🔧 Technical Details
+
+- **Frontend**: Vanilla HTML/CSS/JavaScript
+- **AI Model**: Claude Sonnet 4 via Anthropic API
+- **Swap Engine**: IntercomSwap protocol integration
+- **Data**: Real-time price feeds (in production version)
+- **Storage**: Browser localStorage for portfolio tracking
+
+## 🚀 IntercomSwap Integration
+
+### Swap Workflow:
+1. User requests swap in natural language
+2. Claude calculates optimal route
+3. Shows preview with fees and slippage
+4. User confirms
+5. IntercomSwap executes trade
+6. Portfolio auto-updates
+
+### Supported Features:
+- Multi-hop routing (ETH → USDC → BTC for best price)
+- Slippage protection
+- Gas optimization
+- MEV protection
+- Failed transaction handling
+
+## 🎯 Use Cases
+
+### Daily Portfolio Management
+- Morning portfolio check
+- Track daily P/L
+- Monitor top movers
+- Quick performance snapshot
+
+### Active Trading
+- Get buy/sell signals
+- Execute quick swaps
+- Set price alerts
+- Monitor market conditions
+
+### Strategic Planning
+- Analyze long-term trends
+- Rebalance portfolio
+- Identify opportunities
+- Risk management
+
+### Learning & Research
+- Understand market dynamics
+- Learn technical analysis
+- Study asset fundamentals
+- Track correlation patterns
+
+## 🌱 Future Enhancements
+
+- Integration with real DEX liquidity pools
+- Advanced charting with TradingView
+- DeFi yield farming suggestions
+- NFT portfolio tracking
+- Tax loss harvesting
+- Multi-wallet support
+- Historical performance charts
+- Custom trading strategies
+- Social trading features
+- Voice commands
+
+## 📝 IntercomSwap Competition Entry
+
+**Trac Address**: `[trac120jhcvqqz25f6nnkky0c5nn6pvlzcgy2he5dtrwxusnjf6k2qh6sas7wmu]`
+
+This is a fork of IntercomSwap built for the Trac Systems competition. CryptoPortfolio demonstrates:
+
+✅ Real-world crypto trading utility
+✅ Seamless IntercomSwap integration
+✅ Advanced AI capabilities for market analysis
+✅ Beautiful, professional UI/UX
+✅ Clear instructions for agents (SKILL.md)
+✅ Production-ready architecture
+
+## ⚠️ Disclaimer
+
+CryptoPortfolio is for informational and educational purposes. It does not constitute financial advice. Cryptocurrency trading carries significant risk.
+
+**Always:**
+- Do your own research (DYOR)
+- Never invest more than you can afford to lose
+- Understand the risks of crypto trading
+- Verify all transactions before confirming
+- Consider tax implications
+
+**The AI provides analysis based on data, but:**
+- Markets are unpredictable
+- Past performance ≠ future results
+- No guarantee of profits
+- You are responsible for your trading decisions
+
+## 🤝 Contributing
+
+This project is part of the IntercomSwap ecosystem. Fork it and build your own trading tools!
+
+## 📄 License
+
+MIT License - use freely and modify
+
+## 🔗 Links
+
+- [IntercomSwap Original](https://github.com/TracSystems/intercom-swap)
+- [Intercom Framework](https://github.com/Trac-Systems/intercom)
+- [Awesome Intercom](https://github.com/Trac-Systems/awesome-intercom)
+- [Competition Details](https://github.com/Trac-Systems/intercom/blob/main/SKILL.md)
+
 ---
-If you plan to build your own app, study the existing contract/protocol and remove example logic as needed (see `SKILL.md`).
+
+Built with 💰 for crypto traders using Claude AI and the IntercomSwap framework
+
+*Trade smart, not hard.* 🚀
