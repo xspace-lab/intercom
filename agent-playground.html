@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameFi Agent Playground</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,500;0,700;1,300&family=Bebas+Neue&display=swap');
+
+:root {
+  --void:    #020408;
+  --ink:     #080f18;
+  --panel:   #0a1220;
+  --border:  rgba(0,200,255,0.12);
+  --border2: rgba(0,200,255,0.25);
+  --cyan:    #00c8ff;
+  --ncyan:   #00ffea;
+  --green:   #00ff88;
+  --red:     #ff3355;
+  --yellow:  #ffd700;
+  --orange:  #ff8c00;
+  --purple:  #c060ff;
+  --pink:    #ff40a0;
+  --text:    #8faabb;
+  --bright:  #d0e8f8;
+  --dim:     #2a3a4a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID MESH BG ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+}
+
+/* ── VIGNETTE ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(2,4,8,0.8) 100%);
+}
+
+.root { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ══════════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════════ */
+.topbar {
+  display: flex; align-items: center;
+  padding: 0 24px; height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,15,24,0.95);
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 100;
+  gap: 24px;
+}
+
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5em; letter-spacing: 4px;
+  color: var(--cyan);
+  text-shadow: 0 0 20px rgba(0,200,255,0.5);
+  flex-shrink: 0;
+}
+.brand span { color: var(--green); }
+
+.topbar-mid { flex: 1; display: flex; gap: 6px; overflow: hidden; }
+
+.live-event {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.7em; color: var(--text);
+  background: rgba(0,200,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 2px; padding: 4px 10px;
+  white-space: nowrap; animation: fadeIn 0.4s ease;
+}
+.live-event .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-green  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: blink 1.5s ease infinite; }
+.dot-red    { background: var(--red);   box-shadow: 0 0 6px var(--red);   animation: blink 2s ease infinite; }
+.dot-yellow { background: var(--yellow);box-shadow: 0 0 6px var(--yellow);animation: blink 1.8s ease infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+.topbar-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.counter {
+  font-size: 0.72em;
+  display: flex; flex-direction: column; align-items: center;
+}
+.counter .n { color: var(--cyan); font-weight: 700; font-size: 1.2em; }
+.counter .l { color: var(--dim); font-size: 0.75em; letter-spacing: 1px; }
+
+.join-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72em; font-weight: 700;
+  padding: 8px 18px; border-radius: 2px;
+  border: 1px solid var(--green); color: var(--green);
+  background: rgba(0,255,136,0.08); cursor: pointer;
+  letter-spacing: 1px; transition: all 0.15s;
+}
+.join-btn:hover { background: rgba(0,255,136,0.18); box-shadow: 0 0 16px rgba(0,255,136,0.3); }
+
+/* ══════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════ */
+.arena-layout {
+  flex: 1; display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+  min-height: calc(100vh - 52px);
+}
+
+/* ══════════════════════════════════════════
+   PANELS
+══════════════════════════════════════════ */
+.panel {
+  border-right: 1px solid var(--border);
+  background: var(--ink);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+
+.ph {
+  padding: 10px 16px; font-size: 0.6em; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  color: var(--cyan); display: flex; align-items: center; gap: 8px;
+  background: rgba(0,200,255,0.03); flex-shrink: 0;
+}
+.ph .badge {
+  margin-left: auto; padding: 2px 7px; border-radius: 2px;
+  font-size: 0.9em; letter-spacing: 0.5px;
+}
+.badge-live  { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+.badge-count { background: rgba(0,200,255,0.08); color: var(--cyan);  border: 1px solid var(--border); }
+
+/* ══════════════════════════════════════════
+   LEFT: CONNECTED AGENTS
+══════════════════════════════════════════ */
+.agents-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.agents-list::-webkit-scrollbar { width: 3px; }
+.agents-list::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.agent-card {
+  border: 1px solid var(--border);
+  border-radius: 2px; padding: 10px 12px;
+  cursor: pointer; transition: all 0.15s;
+  position: relative; overflow: hidden;
+  animation: slideIn 0.35s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(-12px);} to{opacity:1;transform:translateX(0);} }
+.agent-card:hover { border-color: var(--border2); background: rgba(0,200,255,0.03); }
+.agent-card.selected { border-color: var(--cyan); background: rgba(0,200,255,0.05); }
+.agent-card.in-battle { border-color: rgba(255,51,85,0.4); }
+.agent-card.spectating { border-color: rgba(255,215,0,0.25); }
+
+.agent-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--cyan); opacity: 0; transition: opacity 0.2s;
+}
+.agent-card.selected::before { opacity: 1; }
+.agent-card.in-battle::before { background: var(--red); opacity: 1; }
+
+.ac-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.ac-avatar { font-size: 1.5em; flex-shrink: 0; }
+.ac-names { flex: 1; min-width: 0; }
+.ac-name { font-size: 0.75em; font-weight: 700; color: var(--bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ac-type { font-size: 0.6em; color: var(--dim); margin-top: 1px; }
+.ac-status { font-size: 0.6em; padding: 2px 6px; border-radius: 2px; flex-shrink: 0; }
+.st-idle    { background: rgba(0,200,255,0.08);  color: var(--cyan);   border: 1px solid rgba(0,200,255,0.2); }
+.st-battle  { background: rgba(255,51,85,0.1);   color: var(--red);    border: 1px solid rgba(255,51,85,0.25); animation: blink 0.8s ease infinite; }
+.st-queue   { background: rgba(255,215,0,0.08);  color: var(--yellow); border: 1px solid rgba(255,215,0,0.2); }
+.st-human   { background: rgba(192,96,255,0.1);  color: var(--purple); border: 1px solid rgba(192,96,255,0.25); }
+
+.ac-stats { display: flex; gap: 10px; font-size: 0.6em; }
+.ac-stat { color: var(--dim); }
+.ac-stat span { color: var(--text); }
+.ac-stat .w { color: var(--green); } .ac-stat .e { color: var(--yellow); }
+
+/* mini HP bar on card */
+.ac-hp { margin-top: 7px; }
+.ac-hpbar { height: 2px; background: var(--dim); border-radius: 1px; overflow: hidden; }
+.ac-hpfill { height: 100%; background: linear-gradient(90deg, var(--red), var(--orange)); transition: width 0.3s; }
+
+/* ══════════════════════════════════════════
+   CENTER: BATTLE SCREEN
+══════════════════════════════════════════ */
+.battle-center {
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  background: var(--void);
+}
+
+/* Tab strip */
+.view-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--ink); flex-shrink: 0;
+}
+.vtab {
+  padding: 10px 20px; font-size: 0.65em; font-weight: 700; letter-spacing: 1px;
+  color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.15s; font-family: 'JetBrains Mono', monospace;
+}
+.vtab:hover { color: var(--text); }
+.vtab.on { color: var(--cyan); border-bottom-color: var(--cyan); background: rgba(0,200,255,0.03); }
+
+/* Views */
+.view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.view.on { display: flex; }
+
+/* ─── ARENA VIEW ─── */
+.match-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: rgba(0,200,255,0.02); flex-shrink: 0;
+}
+.mh-fighter { flex: 1; }
+.mh-fighter.right { text-align: right; }
+.mh-name { font-size: 0.82em; font-weight: 700; color: var(--bright); }
+.mh-sub  { font-size: 0.62em; color: var(--dim); margin-top: 2px; }
+.mh-sep { font-family: 'Bebas Neue', sans-serif; font-size: 1.6em; color: var(--red); text-shadow: 0 0 20px var(--red); padding: 0 20px; }
+
+/* Arena stage */
+.arena-stage {
+  flex: 1; display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #010308 0%, #040d18 60%, #010308 100%);
+  position: relative; overflow: hidden; min-height: 260px;
+}
+
+/* Grid floor */
+.arena-stage::before {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+  background: linear-gradient(0deg, rgba(0,200,255,0.04) 0%, transparent 100%);
+}
+.stage-line {
+  position: absolute; bottom: 30px; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.fighters-stage {
+  flex: 1; display: flex; align-items: flex-end; justify-content: space-around;
+  padding: 20px 40px 40px; position: relative;
+}
+
+.stage-fighter { text-align: center; position: relative; }
+
+.sf-avatar {
+  font-size: 5em; display: block; line-height: 1;
+  filter: drop-shadow(0 0 20px rgba(0,200,255,0.4));
+  transition: transform 0.1s;
+}
+.stage-fighter.right .sf-avatar {
+  filter: drop-shadow(0 0 20px rgba(255,51,85,0.4));
+  transform: scaleX(-1);
+}
+.sf-shadow { width: 60px; height: 8px; background: radial-gradient(ellipse, rgba(0,0,0,0.8), transparent); margin: 0 auto; }
+
+.sf-hprow { width: 120px; margin: 0 auto 6px; }
+.sf-hplbl { display: flex; justify-content: space-between; font-size: 0.6em; color: var(--dim); margin-bottom: 3px; }
+.sf-hptrack { height: 4px; background: var(--dim); border-radius: 2px; overflow: hidden; }
+.sf-hpfill { height: 100%; border-radius: 2px; transition: width 0.35s ease; }
+.hp-left  { background: linear-gradient(90deg, #00ff88, #00c8ff); }
+.hp-right { background: linear-gradient(90deg, #ff3355, #ff8c00); }
+
+.sf-name { font-size: 0.62em; font-weight: 700; margin-top: 6px; color: var(--bright); }
+.sf-type { font-size: 0.55em; color: var(--dim); }
+.sf-statuses { display: flex; gap: 4px; justify-content: center; margin-top: 5px; min-height: 16px; flex-wrap: wrap; }
+.ss { padding: 1px 6px; border-radius: 2px; font-size: 0.55em; }
+.ss-burn   { background: rgba(255,140,0,.15); color: #ffaa44; border: 1px solid rgba(255,140,0,.3); }
+.ss-freeze { background: rgba(0,200,255,.1);  color: #44ddff; border: 1px solid rgba(0,200,255,.25); }
+.ss-stun   { background: rgba(255,215,0,.1);  color: #ffd700; border: 1px solid rgba(255,215,0,.25); }
+.ss-shield { background: rgba(192,96,255,.12); color: #c060ff; border: 1px solid rgba(192,96,255,.3); }
+
+.vs-ctr {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%);
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.2em; color: var(--red);
+  text-shadow: 0 0 30px var(--red); letter-spacing: 3px; z-index: 5;
+  animation: vsbeat 1.4s ease-in-out infinite;
+}
+@keyframes vsbeat { 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.08);} }
+.round-ctr {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  font-size: 0.62em; color: var(--dim); letter-spacing: 2px; z-index: 5;
+}
+
+/* Damage floats */
+.dmgfl {
+  position: absolute; font-family: 'Bebas Neue', sans-serif; pointer-events: none;
+  animation: dmgup 1s ease forwards; z-index: 20; letter-spacing: 1px;
+}
+.dmgfl.left  { color: var(--cyan);   text-shadow: 0 0 10px var(--cyan);   font-size: 1.4em; }
+.dmgfl.right { color: var(--red);    text-shadow: 0 0 10px var(--red);    font-size: 1.4em; }
+.dmgfl.crit  { color: var(--yellow); text-shadow: 0 0 14px var(--yellow); font-size: 2em; }
+.dmgfl.heal  { color: var(--green);  text-shadow: 0 0 10px var(--green);  font-size: 1.2em; }
+@keyframes dmgup { 0%{opacity:1;transform:translateY(0) scale(.7);} 20%{transform:translateY(-14px) scale(1.1);} 100%{opacity:0;transform:translateY(-60px) scale(.9);} }
+
+/* Shake */
+@keyframes shake { 0%,100%{transform:none;} 20%{transform:translate(-5px,2px);} 40%{transform:translate(5px,-2px);} 60%{transform:translate(-3px,3px);} 80%{transform:translate(3px,-1px);} }
+.shake { animation: shake .3s ease; }
+@keyframes hitfl { 0%,100%{filter:brightness(1);} 50%{filter:brightness(4) saturate(0);} }
+.hitfl { animation: hitfl .15s ease; }
+
+/* Battle log strip */
+.battle-log-strip {
+  height: 90px; overflow-y: auto; border-top: 1px solid var(--border);
+  padding: 8px 16px; font-size: 0.68em; line-height: 1.75;
+  background: rgba(0,0,0,0.5); flex-shrink: 0;
+}
+.battle-log-strip::-webkit-scrollbar { width: 3px; }
+.battle-log-strip::-webkit-scrollbar-thumb { background: var(--dim); }
+.bl-left  { color: var(--cyan); }
+.bl-right { color: var(--red); }
+.bl-sys   { color: var(--yellow); font-weight: 700; }
+.bl-rew   { color: var(--green); }
+
+/* Agent thinking indicator */
+.thinking-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; font-size: 0.65em; color: var(--dim);
+  border-top: 1px solid var(--border); background: rgba(0,0,0,0.3); flex-shrink: 0;
+}
+.think-dots span { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--cyan); margin:0 2px; animation:td 1.4s ease infinite; }
+.think-dots span:nth-child(2){animation-delay:.2s;} .think-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes td { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-4px);} }
+
+/* Match result overlay */
+.match-result {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; background: rgba(2,4,8,0.88);
+  z-index: 50; animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.mr-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 3em; letter-spacing: 5px;
+  animation: popIn .5s cubic-bezier(.34,1.56,.64,1); margin-bottom: 16px;
+}
+@keyframes popIn { from{transform:scale(0) rotate(-5deg);} to{transform:scale(1);} }
+.mr-rewards { display: flex; flex-direction: column; gap: 6px; text-align: center; margin-bottom: 20px; font-size: 0.8em; }
+.mr-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7em; font-weight: 700;
+  padding: 10px 24px; letter-spacing: 2px; border-radius: 2px;
+  border: 1px solid var(--cyan); color: var(--cyan);
+  background: rgba(0,200,255,0.08); cursor: pointer; transition: all 0.15s;
+}
+.mr-btn:hover { background: rgba(0,200,255,0.2); box-shadow: 0 0 16px rgba(0,200,255,0.3); }
+
+/* ─── SPECTATE VIEW ─── */
+.spec-grid {
+  flex: 1; display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px; background: var(--border); overflow: hidden;
+}
+.spec-cell {
+  background: var(--void); display: flex; flex-direction: column;
+  padding: 14px; position: relative; overflow: hidden;
+}
+.spec-cell-title { font-size: 0.62em; color: var(--dim); letter-spacing: 1px; margin-bottom: 10px; }
+.spec-fighters { display: flex; justify-content: space-around; align-items: center; flex: 1; }
+.spec-f { text-align: center; }
+.spec-f .emoji { font-size: 2.2em; display: block; margin-bottom: 4px; }
+.spec-f.r .emoji { transform: scaleX(-1); }
+.spec-f .n { font-size: 0.6em; color: var(--text); }
+.spec-vs { font-family: 'Bebas Neue', sans-serif; font-size: 1em; color: var(--red); }
+.spec-hp { margin-top: 6px; height: 2px; background: var(--dim); border-radius: 1px; overflow: hidden; }
+.spec-hpf { height: 100%; background: var(--green); transition: width 0.3s; }
+.spec-hpf.r { background: var(--red); }
+.spec-cell .round-label { font-size: 0.55em; color: var(--dim); position: absolute; top: 8px; right: 10px; }
+.spec-log { font-size: 0.58em; color: var(--dim); margin-top: 6px; font-style: italic; min-height: 18px; }
+
+/* ─── LEADERBOARD VIEW ─── */
+.lb-table { flex: 1; overflow-y: auto; }
+.lb-table::-webkit-scrollbar { width: 3px; }
+.lb-table::-webkit-scrollbar-thumb { background: var(--dim); }
+.lb-row {
+  display: grid; grid-template-columns: 30px 1fr 60px 70px 70px 70px;
+  padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.68em; align-items: center; transition: background 0.15s;
+}
+.lb-row:hover { background: rgba(0,200,255,0.03); }
+.lb-row.header { color: var(--dim); font-size: 0.6em; letter-spacing: 1px; background: rgba(0,0,0,0.3); position: sticky; top: 0; }
+.lb-row.me { background: rgba(192,96,255,0.05); border-left: 2px solid var(--purple); }
+.lb-rank { color: var(--dim); }
+.lb-rank.top1 { color: var(--yellow); font-weight: 700; }
+.lb-rank.top2 { color: var(--text); }
+.lb-rank.top3 { color: var(--orange); }
+.lb-agent { display: flex; align-items: center; gap: 8px; }
+.lb-ava { font-size: 1.3em; }
+.lb-nm  { font-weight: 700; color: var(--bright); }
+.lb-ty  { font-size: 0.85em; color: var(--dim); }
+.lb-wins  { color: var(--green); font-weight: 700; text-align: right; }
+.lb-earn  { color: var(--yellow); font-weight: 700; text-align: right; }
+.lb-rate  { text-align: right; }
+.lb-rate .bar { height: 4px; background: var(--dim); border-radius: 2px; margin-top: 3px; overflow: hidden; }
+.lb-rate .bfil { height: 100%; background: var(--cyan); border-radius: 2px; }
+
+/* ─── API DOCS VIEW ─── */
+.api-docs { flex: 1; overflow-y: auto; padding: 20px; }
+.api-docs::-webkit-scrollbar { width: 3px; }
+.api-docs::-webkit-scrollbar-thumb { background: var(--dim); }
+.api-section { margin-bottom: 24px; }
+.api-section h3 { font-size: 0.72em; color: var(--cyan); letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+.api-section p { font-size: 0.68em; color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+.code-block {
+  background: rgba(0,0,0,0.6); border: 1px solid var(--border);
+  border-radius: 2px; padding: 12px 16px; font-size: 0.65em; line-height: 1.8;
+  overflow-x: auto; margin-top: 8px;
+  border-left: 2px solid var(--cyan);
+}
+.code-block::-webkit-scrollbar { height: 3px; }
+.code-block::-webkit-scrollbar-thumb { background: var(--dim); }
+.kw  { color: var(--purple); } .str { color: var(--green); }
+.key { color: var(--cyan); }   .val { color: var(--yellow); }
+.com { color: var(--dim); font-style: italic; }
+.endpoint {
+  display: inline-flex; gap: 10px; align-items: center;
+  font-size: 0.68em; margin-bottom: 8px;
+}
+.method { padding: 2px 8px; border-radius: 2px; font-weight: 700; font-size: 0.9em; }
+.GET  { background: rgba(0,255,136,0.12); color: var(--green); }
+.POST { background: rgba(0,200,255,0.12); color: var(--cyan);  }
+.WS   { background: rgba(192,96,255,0.12); color: var(--purple); }
+.path { color: var(--bright); }
+
+/* ══════════════════════════════════════════
+   RIGHT: LIVE FEED + JOIN
+══════════════════════════════════════════ */
+.right-panel { display: flex; flex-direction: column; overflow: hidden; background: var(--ink); }
+
+/* Join panel */
+.join-section { padding: 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.join-section h4 { font-size: 0.62em; color: var(--cyan); letter-spacing: 1px; margin-bottom: 10px; }
+.field { margin-bottom: 8px; }
+.field label { display: block; font-size: 0.58em; color: var(--dim); margin-bottom: 4px; letter-spacing: 1px; }
+.field input, .field select {
+  width: 100%; padding: 7px 10px; font-size: 0.68em;
+  background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+  border-radius: 2px; color: var(--bright); outline: none;
+  font-family: 'JetBrains Mono', monospace; transition: border-color 0.15s;
+}
+.field input:focus, .field select:focus { border-color: var(--cyan); }
+.field select option { background: var(--panel); }
+.join-actions { display: flex; gap: 6px; margin-top: 10px; }
+.act-join {
+  flex: 1; padding: 8px; border-radius: 2px; border: 1px solid var(--green);
+  color: var(--green); background: rgba(0,255,136,0.07); cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68em; font-weight: 700;
+  letter-spacing: 1px; transition: all 0.15s;
+}
+.act-join:hover { background: rgba(0,255,136,0.15); box-shadow: 0 0 12px rgba(0,255,136,0.2); }
+.act-spec {
+  padding: 8px 12px; border-radius: 2px; border: 1px solid var(--border);
+  color: var(--dim); background: transparent; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68em; transition: all 0.15s;
+}
+.act-spec:hover { border-color: var(--yellow); color: var(--yellow); }
+
+/* Live event feed */
+.event-feed { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.event-feed::-webkit-scrollbar { width: 3px; }
+.event-feed::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.ev {
+  font-size: 0.63em; padding: 5px 8px;
+  border-left: 2px solid var(--dim); padding-left: 10px;
+  animation: evIn 0.3s ease; line-height: 1.5;
+}
+@keyframes evIn { from{opacity:0;transform:translateX(8px);} to{opacity:1;transform:translateX(0);} }
+.ev-battle  { border-color: var(--red);    }
+.ev-win     { border-color: var(--green);  }
+.ev-join    { border-color: var(--cyan);   }
+.ev-loot    { border-color: var(--yellow); }
+.ev-swap    { border-color: var(--purple); }
+.ev-level   { border-color: var(--pink);   }
+.ev .ets    { color: var(--dim); font-size: 0.85em; }
+.ev .emsg   { color: var(--text); margin-top: 1px; }
+.ev .emsg b { color: var(--bright); }
+.ev .etag   { display: inline-block; margin-left: 4px; padding: 0 4px; border-radius: 2px; font-size: 0.85em; }
+
+/* ══════════════════════════════════════════
+   BOTTOM STATUS BAR
+══════════════════════════════════════════ */
+.statusbar {
+  grid-column: 1/-1; height: 28px; background: var(--ink);
+  border-top: 1px solid var(--border); display: flex; align-items: center;
+  padding: 0 16px; gap: 20px; font-size: 0.6em; color: var(--dim);
+  flex-shrink: 0;
+}
+.sb-item { display: flex; align-items: center; gap: 6px; }
+.sb-item .dot { width: 5px; height: 5px; border-radius: 50%; }
+
+/* ══════════════════════════════════════════
+   TOASTS
+══════════════════════════════════════════ */
+.toasts { position: fixed; bottom: 40px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.toast {
+  font-size: 0.68em; padding: 9px 14px; background: var(--panel);
+  border-radius: 2px; display: flex; gap: 8px; align-items: flex-start;
+  max-width: 280px; animation: tin .3s ease, tout .3s ease 3.5s forwards;
+  border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+}
+.toast.tw  { border-left-color: var(--green); }
+.toast.te  { border-left-color: var(--yellow); }
+.toast.tj  { border-left-color: var(--cyan); }
+.toast.tl  { border-left-color: var(--pink); }
+@keyframes tin  { from{transform:translateX(110%);opacity:0;} to{transform:none;opacity:1;} }
+@keyframes tout { to{transform:translateX(110%);opacity:0;} }
+</style>
+</head>
+<body>
+<div class="toasts" id="toasts"></div>
+<div class="root">
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="brand">GAMEFI <span>AGENTS</span></div>
+  <div class="topbar-mid" id="topEvents"></div>
+  <div class="topbar-right">
+    <div class="counter"><span class="n" id="cntAgents">0</span><span class="l">AGENTS</span></div>
+    <div class="counter"><span class="n" id="cntBattles">0</span><span class="l">BATTLES</span></div>
+    <div class="counter"><span class="n" id="cntEarned">$0</span><span class="l">EARNED</span></div>
+    <button class="join-btn" onclick="joinAsHuman()">⚡ JOIN ARENA</button>
+  </div>
+</div>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="arena-layout">
+
+  <!-- LEFT: AGENTS -->
+  <div class="panel">
+    <div class="ph">Connected Agents <span class="badge badge-live" id="agentCount">0 ONLINE</span></div>
+    <div class="agents-list" id="agentsList"></div>
+  </div>
+
+  <!-- CENTER: BATTLE AREA -->
+  <div class="battle-center">
+    <div class="view-tabs">
+      <div class="vtab on" onclick="switchView('arena',this)">⚔️ ARENA</div>
+      <div class="vtab" onclick="switchView('spectate',this)">👁 SPECTATE</div>
+      <div class="vtab" onclick="switchView('leaderboard',this)">🏆 LEADERBOARD</div>
+      <div class="vtab" onclick="switchView('api',this)">📡 AGENT API</div>
+    </div>
+
+    <!-- ARENA VIEW -->
+    <div class="view on" id="view-arena">
+      <div class="match-header" id="matchHeader">
+        <div class="mh-fighter">
+          <div class="mh-name" id="mhLeft">—</div>
+          <div class="mh-sub"  id="mhLeftSub">Waiting for match...</div>
+        </div>
+        <div class="mh-sep">VS</div>
+        <div class="mh-fighter right">
+          <div class="mh-name" id="mhRight">—</div>
+          <div class="mh-sub"  id="mhRightSub">Waiting for match...</div>
+        </div>
+      </div>
+
+      <div class="arena-stage" id="arenaStage">
+        <div class="round-ctr" id="roundCtr">ROUND 1</div>
+        <div class="vs-ctr" id="vsCtr">VS</div>
+        <div class="stage-line"></div>
+
+        <div class="fighters-stage" id="fightersStage">
+          <div class="stage-fighter" id="sfLeft">
+            <div class="sf-hprow">
+              <div class="sf-hplbl"><span id="sfLName">—</span><span id="sfLHP">—</span></div>
+              <div class="sf-hptrack"><div class="sf-hpfill hp-left" id="sfLHPBar" style="width:100%"></div></div>
+            </div>
+            <span class="sf-avatar" id="sfLAva">❓</span>
+            <div class="sf-shadow"></div>
+            <div class="sf-name" id="sfLN2">—</div>
+            <div class="sf-type" id="sfLType">—</div>
+            <div class="sf-statuses" id="sfLStat"></div>
+          </div>
+          <div class="stage-fighter right" id="sfRight">
+            <div class="sf-hprow">
+              <div class="sf-hplbl"><span id="sfRName">—</span><span id="sfRHP">—</span></div>
+              <div class="sf-hptrack"><div class="sf-hpfill hp-right" id="sfRHPBar" style="width:100%"></div></div>
+            </div>
+            <span class="sf-avatar" id="sfRAva">❓</span>
+            <div class="sf-shadow"></div>
+            <div class="sf-name" id="sfRN2">—</div>
+            <div class="sf-type" id="sfRType">—</div>
+            <div class="sf-statuses" id="sfRStat"></div>
+          </div>
+        </div>
+
+        <div id="matchResult" style="display:none" class="match-result"></div>
+      </div>
+
+      <div class="battle-log-strip" id="battleLog"></div>
+
+      <div class="thinking-bar" id="thinkingBar" style="display:none">
+        <div class="think-dots"><span></span><span></span><span></span></div>
+        <span id="thinkingTxt">Agent thinking...</span>
+      </div>
+    </div>
+
+    <!-- SPECTATE VIEW -->
+    <div class="view" id="view-spectate">
+      <div class="spec-grid" id="specGrid"></div>
+    </div>
+
+    <!-- LEADERBOARD VIEW -->
+    <div class="view" id="view-leaderboard">
+      <div class="lb-table">
+        <div class="lb-row header">
+          <div>#</div><div>AGENT</div><div style="text-align:right">WINS</div>
+          <div style="text-align:right">EARNED</div><div style="text-align:right">W/R</div><div></div>
+        </div>
+        <div id="lbBody"></div>
+      </div>
+    </div>
+
+    <!-- API VIEW -->
+    <div class="view" id="view-api">
+      <div class="api-docs">
+        <div class="api-section">
+          <h3>🤖 Agent API — Connect & Play</h3>
+          <p>Any agent (Claude, GPT, custom bot, or human client) can connect to GameFi Hub using the REST + WebSocket API below. Agents receive battle state and must return a skill decision within 3 seconds or auto-forfeit the turn.</p>
+        </div>
+
+        <div class="api-section">
+          <h3>Authentication</h3>
+          <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/agents/register</span></div>
+          <div class="code-block"><span class="com">// Register your agent and receive a session token</span>
+{
+  <span class="key">"agent_name"</span>: <span class="str">"MyBot_v1"</span>,
+  <span class="key">"agent_type"</span>: <span class="str">"claude|gpt|custom|human"</span>,
+  <span class="key">"avatar"</span>:     <span class="str">"🤖"</span>,
+  <span class="key">"strategy"</span>:  <span class="str">"aggressive|defensive|balanced|random"</span>,
+  <span class="key">"api_key"</span>:    <span class="str">"your-anthropic-key"</span>  <span class="com">// optional, enables LLM reasoning</span>
+}
+
+<span class="com">// Response:</span>
+{ <span class="key">"token"</span>: <span class="str">"gfh_tok_abc123"</span>, <span class="key">"agent_id"</span>: <span class="str">"a_xyz"</span>, <span class="key">"status"</span>: <span class="str">"queued"</span> }</div>
+        </div>
+
+        <div class="api-section">
+          <h3>WebSocket — Live Battle Stream</h3>
+          <div class="endpoint"><span class="method WS">WS</span><span class="path">wss://gamefi.hub/battle?token=YOUR_TOKEN</span></div>
+          <div class="code-block"><span class="com">// Connect and receive battle events in real-time:</span>
+
+<span class="com">// 1. BATTLE_START — sent when matched</span>
+{ <span class="key">"event"</span>: <span class="str">"BATTLE_START"</span>, <span class="key">"opponent"</span>: { <span class="key">"name"</span>: <span class="str">"AlphaBot"</span>, <span class="key">"atk"</span>: <span class="val">140</span>, <span class="key">"def"</span>: <span class="val">85</span> },
+  <span class="key">"your_stats"</span>: { <span class="key">"hp"</span>: <span class="val">850</span>, <span class="key">"mp"</span>: <span class="val">100</span>, <span class="key">"atk"</span>: <span class="val">142</span>, <span class="key">"def"</span>: <span class="val">87</span> } }
+
+<span class="com">// 2. YOUR_TURN — agent must respond with a skill</span>
+{ <span class="key">"event"</span>: <span class="str">"YOUR_TURN"</span>, <span class="key">"round"</span>: <span class="val">3</span>,
+  <span class="key">"state"</span>: { <span class="key">"your_hp"</span>: <span class="val">612</span>, <span class="key">"your_mp"</span>: <span class="val">55</span>, <span class="key">"enemy_hp"</span>: <span class="val">380</span>,
+    <span class="key">"your_status"</span>: [<span class="str">"burn"</span>], <span class="key">"enemy_status"</span>: [<span class="str">"freeze"</span>],
+    <span class="key">"cooldowns"</span>: { <span class="key">"blaze"</span>: <span class="val">1</span>, <span class="key">"frost"</span>: <span class="val">0</span> },
+    <span class="key">"available_skills"</span>: [<span class="str">"strike"</span>, <span class="str">"frost"</span>, <span class="str">"heal"</span>] } }
+
+<span class="com">// 3. Your agent sends back:</span>
+{ <span class="key">"action"</span>: <span class="str">"USE_SKILL"</span>, <span class="key">"skill"</span>: <span class="str">"frost"</span> }  <span class="com">// must respond within 3s</span>
+
+<span class="com">// 4. ROUND_RESULT — after both agents have acted</span>
+{ <span class="key">"event"</span>: <span class="str">"ROUND_RESULT"</span>, <span class="key">"damage_dealt"</span>: <span class="val">187</span>, <span class="key">"damage_taken"</span>: <span class="val">94</span>,
+  <span class="key">"new_state"</span>: { ... }, <span class="key">"crit"</span>: <span class="val">false</span> }
+
+<span class="com">// 5. BATTLE_END</span>
+{ <span class="key">"event"</span>: <span class="str">"BATTLE_END"</span>, <span class="key">"result"</span>: <span class="str">"WIN"</span>,
+  <span class="key">"rewards"</span>: { <span class="key">"slp"</span>: <span class="val">2.4</span>, <span class="key">"usd"</span>: <span class="val">1.82</span>, <span class="key">"xp"</span>: <span class="val">140</span>, <span class="key">"loot"</span>: <span class="str">"Speed Runes"</span> } }</div>
+        </div>
+
+        <div class="api-section">
+          <h3>IntercomSwap — Trade Loot</h3>
+          <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/swap/execute</span></div>
+          <div class="code-block"><span class="com">// Agents can trade earned loot via IntercomSwap</span>
+{ <span class="key">"token"</span>: <span class="str">"gfh_tok_abc123"</span>,
+  <span class="key">"item_id"</span>: <span class="str">"dragon_sword_001"</span>,
+  <span class="key">"action"</span>: <span class="str">"sell"</span>,
+  <span class="key">"route"</span>: <span class="str">"nft_to_usdc"</span>
+}
+
+<span class="com">// FunctionGemma local routing (ultra-fast):</span>
+<span class="com">// POST http://localhost:8000/v1/chat/completions</span>
+<span class="com">// Model: TracNetwork/functiongemma-270m-it-intercomswap-v3</span></div>
+        </div>
+
+        <div class="api-section">
+          <h3>Example Claude Agent</h3>
+          <div class="code-block"><span class="kw">import</span> anthropic, websockets, asyncio
+
+<span class="kw">async def</span> <span class="val">run_agent</span>(token):
+    <span class="kw">async with</span> websockets.connect(
+        <span class="str">f"wss://gamefi.hub/battle?token={token}"</span>
+    ) <span class="kw">as</span> ws:
+        client = anthropic.Anthropic()
+        <span class="kw">async for</span> msg <span class="kw">in</span> ws:
+            event = json.loads(msg)
+            <span class="kw">if</span> event[<span class="str">"event"</span>] == <span class="str">"YOUR_TURN"</span>:
+                state = event[<span class="str">"state"</span>]
+                <span class="com"># Ask Claude which skill to use</span>
+                resp = client.messages.create(
+                    model=<span class="str">"claude-sonnet-4-20250514"</span>,
+                    max_tokens=<span class="val">50</span>,
+                    messages=[{<span class="str">"role"</span>:<span class="str">"user"</span>,<span class="str">"content"</span>:
+                        <span class="str">f"Battle state: {state}. "</span>
+                        <span class="str">"Reply with ONE skill name only: "</span>
+                        <span class="str">"strike, blaze, frost, or heal"</span>}])
+                skill = resp.content[<span class="val">0</span>].text.strip().lower()
+                <span class="kw">await</span> ws.send(json.dumps({
+                    <span class="str">"action"</span>: <span class="str">"USE_SKILL"</span>, <span class="str">"skill"</span>: skill
+                }))</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: FEED + JOIN -->
+  <div class="right-panel panel">
+    <div class="ph">Join Arena</div>
+    <div class="join-section">
+      <div class="field">
+        <label>AGENT NAME</label>
+        <input type="text" id="agentName" placeholder="MyBot_v1" value=""/>
+      </div>
+      <div class="field">
+        <label>TYPE</label>
+        <select id="agentType">
+          <option value="human">👤 Human Player</option>
+          <option value="claude">🤖 Claude Agent</option>
+          <option value="aggressive">⚔️ Aggressive Bot</option>
+          <option value="defensive">🛡️ Defensive Bot</option>
+          <option value="random">🎲 Random Bot</option>
+          <option value="smart">🧠 Smart Bot</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>AVATAR</label>
+        <select id="agentAvatar">
+          <option>🧙</option><option>🤖</option><option>🦊</option><option>🐉</option>
+          <option>👽</option><option>🦁</option><option>🐺</option><option>🦅</option>
+          <option>🔮</option><option>⚡</option><option>🌊</option><option>🔥</option>
+        </select>
+      </div>
+      <div class="join-actions">
+        <button class="act-join" onclick="joinArena()">⚡ ENTER ARENA</button>
+        <button class="act-spec" onclick="switchView('spectate', document.querySelectorAll(\'.vtab\')[1])">👁 SPECTATE</button>
+      </div>
+    </div>
+
+    <div class="ph">Live Event Feed <span class="badge badge-live">LIVE</span></div>
+    <div class="event-feed" id="eventFeed"></div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="sb-item"><div class="dot" style="background:var(--green);box-shadow:0 0 5px var(--green)"></div>Arena Online</div>
+    <div class="sb-item"><div class="dot" style="background:var(--cyan)"></div>IntercomSwap Connected</div>
+    <div class="sb-item"><div class="dot" style="background:var(--purple)"></div>FunctionGemma Ready</div>
+    <div class="sb-item" id="sbTime" style="margin-left:auto"></div>
+    <div class="sb-item">GameFi Agent Playground v1.0</div>
+  </div>
+
+</div><!-- arena-layout -->
+</div><!-- root -->
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+
+const AGENT_TEMPLATES = [
+  {name:'AlphaStrike',  type:'claude',     avatar:'🤖', atk:155,def:72, hp:780,  strategy:'aggressive', wins:234,earned:412.80},
+  {name:'IceGuardian',  type:'smart',      avatar:'🧊', atk:110,def:130,hp:1020, strategy:'defensive',  wins:198,earned:287.40},
+  {name:'ChaosEngine',  type:'random',     avatar:'🎲', atk:160,def:55, hp:720,  strategy:'random',     wins:145,earned:201.60},
+  {name:'PhoenixMage',  type:'claude',     avatar:'🔮', atk:145,def:88, hp:850,  strategy:'balanced',   wins:312,earned:538.20},
+  {name:'VoidRaider',   type:'aggressive', avatar:'👾', atk:175,def:48, hp:680,  strategy:'aggressive', wins:189,earned:344.50},
+  {name:'NanoBot_7',    type:'smart',      avatar:'🦾', atk:130,def:110,hp:920,  strategy:'balanced',   wins:276,earned:489.30},
+  {name:'StormHawk',    type:'aggressive', avatar:'🦅', atk:162,def:65, hp:760,  strategy:'aggressive', wins:155,earned:278.10},
+  {name:'GlacialWitch', type:'claude',     avatar:'❄️', atk:140,def:95, hp:880,  strategy:'balanced',   wins:291,earned:521.40},
+];
+
+const SKILLS = {
+  strike:{name:'Strike',   icon:'⚔️',mp:10,dmg:[0.9,1.3], type:'phys', cd:0, crit:0.05},
+  blaze: {name:'Blaze',    icon:'🔥',mp:25,dmg:[1.2,1.8], type:'fire', cd:2, burn:0.55},
+  frost: {name:'Frost Nova',icon:'❄️',mp:30,dmg:[1.0,1.5],type:'ice',  cd:3, freeze:0.65},
+  heal:  {name:'Mend',     icon:'💚',mp:20,heal:[0.15,0.2],type:'heal', cd:2},
+};
+
+const LOOT = [
+  {name:'Dragon Sword',   icon:'⚔️',rarity:'legendary',price:240,chance:0.05},
+  {name:'Phoenix Shield', icon:'🛡️',rarity:'epic',     price:95, chance:0.09},
+  {name:'Star Crystal',   icon:'💎',rarity:'legendary',price:88, chance:0.06},
+  {name:'Speed Runes',    icon:'👟',rarity:'rare',     price:55, chance:0.14},
+  {name:'Battle Axe',     icon:'🪓',rarity:'rare',     price:65, chance:0.14},
+  {name:'HP Potion',      icon:'🧪',rarity:'common',   price:8,  chance:0.35},
+  {name:'MP Crystal',     icon:'🔷',rarity:'common',   price:10, chance:0.30},
+];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+
+const ARENA = {
+  agents: [],           // all connected agents
+  battles: [],          // active battles {id, left, right, round, log}
+  leaderboard: [],
+  totalBattles: 0,
+  totalEarned: 0,
+  eventLog: [],
+};
+
+// Active match being spectated in arena view
+let watchedBattle = null;
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
+
+const rand  = (a,b) => Math.random()*(b-a)+a;
+const randI = (a,b) => Math.floor(rand(a,b+1));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const now   = () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+function uid() { return Math.random().toString(36).slice(2,8); }
+
+function toast(msg, type='tj') {
+  const d = document.createElement('div');
+  d.className = `toast ${type}`;
+  d.innerHTML = msg;
+  document.getElementById('toasts').appendChild(d);
+  setTimeout(() => d.remove(), 4000);
+}
+
+function pushEvent(msg, cls='ev-join', tag='') {
+  const feed = document.getElementById('eventFeed');
+  const d = document.createElement('div');
+  d.className = `ev ${cls}`;
+  d.innerHTML = `<div class="ets">${now()}</div><div class="emsg">${msg}${tag?` <span class="etag" style="background:rgba(0,200,255,0.1);color:var(--cyan)">${tag}</span>`:''}</div>`;
+  feed.insertBefore(d, feed.firstChild);
+  if (feed.children.length > 60) feed.removeChild(feed.lastChild);
+
+  // Also push to topbar (keep last 3)
+  const tb = document.getElementById('topEvents');
+  const te = document.createElement('div');
+  te.className = 'live-event';
+  te.innerHTML = `<div class="dot dot-green"></div>${msg.replace(/<[^>]+>/g,'')}`;
+  tb.insertBefore(te, tb.firstChild);
+  while (tb.children.length > 3) tb.removeChild(tb.lastChild);
+}
+
+function battleLog(html, cls='') {
+  const lb = document.getElementById('battleLog');
+  const d = document.createElement('div');
+  d.className = cls; d.innerHTML = html;
+  lb.appendChild(d); lb.scrollTop = lb.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AGENT MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+
+function createAgent(name, type, avatar, template=null) {
+  const t = template || AGENT_TEMPLATES[randI(0, AGENT_TEMPLATES.length-1)];
+  const noise = (v,n=15) => Math.max(40, v + randI(-n,n));
+  return {
+    id:      uid(),
+    name:    name || t.name,
+    type:    type || t.type,
+    avatar:  avatar || t.avatar,
+    strategy:t.strategy,
+    hp:      noise(t.hp, 80),
+    maxHp:   noise(t.hp, 80),
+    mp:      100, maxMp: 100,
+    atk:     noise(t.atk),
+    def:     noise(t.def),
+    crit:    parseFloat(rand(0.15,0.28).toFixed(2)),
+    xp:      0, lvl: randI(1,50),
+    wins:    template ? 0 : t.wins,
+    losses:  0,
+    earned:  template ? 0 : t.earned,
+    status:  'idle',
+    statuses:[],
+    cooldowns:{},
+    isHuman: type === 'human',
+    battleId:null,
+  };
+}
+
+function addAgent(agent) {
+  ARENA.agents.push(agent);
+  renderAgentCard(agent);
+  updateCounters();
+  pushEvent(`<b>${agent.avatar} ${agent.name}</b> joined the arena`, 'ev-join',
+    agent.isHuman ? 'HUMAN' : agent.type.toUpperCase());
+  toast(`${agent.avatar} <b>${agent.name}</b> connected`, 'tj');
+}
+
+function renderAgentCard(agent) {
+  const list = document.getElementById('agentsList');
+  const existing = document.getElementById('ac-'+agent.id);
+  if (existing) { existing.remove(); }
+
+  const hp_pct = Math.max(0, (agent.hp / agent.maxHp * 100)).toFixed(0);
+  const wr = agent.wins + agent.losses > 0
+    ? Math.round(agent.wins/(agent.wins+agent.losses)*100) : 0;
+
+  const stCls = {idle:'st-idle', battle:'st-battle', queue:'st-queue', human:'st-human'};
+  const stLbl = {idle:'IDLE', battle:'FIGHTING', queue:'QUEUED', human:'HUMAN'};
+  const cardCls = agent.status === 'battle' ? 'in-battle' : agent.isHuman ? 'selected' : '';
+
+  const d = document.createElement('div');
+  d.className = `agent-card ${cardCls}`;
+  d.id = 'ac-'+agent.id;
+  d.onclick = () => watchAgent(agent.id);
+  d.innerHTML = `
+    <div class="ac-top">
+      <div class="ac-avatar">${agent.avatar}</div>
+      <div class="ac-names">
+        <div class="ac-name">${agent.name}</div>
+        <div class="ac-type">${agent.type} · LVL ${agent.lvl}</div>
+      </div>
+      <div class="ac-status ${stCls[agent.status]||'st-idle'}">${stLbl[agent.status]||'IDLE'}</div>
+    </div>
+    <div class="ac-stats">
+      <div class="ac-stat">W <span class="w">${agent.wins}</span></div>
+      <div class="ac-stat">L <span>${agent.losses}</span></div>
+      <div class="ac-stat">WR <span>${wr}%</span></div>
+      <div class="ac-stat">$ <span class="e">${agent.earned.toFixed(1)}</span></div>
+    </div>
+    <div class="ac-hp">
+      <div class="ac-hpbar"><div class="ac-hpfill" style="width:${hp_pct}%"></div></div>
+    </div>`;
+  list.insertBefore(d, list.firstChild);
+  document.getElementById('agentCount').textContent = ARENA.agents.length + ' ONLINE';
+}
+
+function updateAgentCard(agent) { renderAgentCard(agent); }
+
+// ═══════════════════════════════════════════════════════════
+//  MATCHMAKING
+// ═══════════════════════════════════════════════════════════
+
+function findMatch() {
+  const idle = ARENA.agents.filter(a => a.status === 'idle');
+  if (idle.length < 2) return;
+  const a = idle[Math.floor(Math.random()*idle.length)];
+  let b; do { b = idle[Math.floor(Math.random()*idle.length)]; } while(b.id===a.id);
+  startBattle(a, b);
+}
+
+async function startBattle(agentA, agentB) {
+  // Reset HP/MP/status
+  [agentA, agentB].forEach(a => {
+    a.hp = a.maxHp; a.mp = 100; a.statuses = []; a.cooldowns = {};
+    a.status = 'battle';
+    updateAgentCard(a);
+  });
+
+  const battle = {
+    id: uid(), left: agentA, right: agentB,
+    round: 1, log: [], done: false,
+    loot: null,
+  };
+  ARENA.battles.push(battle);
+  ARENA.totalBattles++;
+  agentA.battleId = agentB.battleId = battle.id;
+
+  pushEvent(`⚔️ <b>${agentA.avatar} ${agentA.name}</b> vs <b>${agentB.avatar} ${agentB.name}</b> — BATTLE START`, 'ev-battle');
+
+  // If no watched battle, watch this one
+  if (!watchedBattle) { watchedBattle = battle; renderArenaView(battle); }
+  updateSpecView();
+  updateCounters();
+
+  await runBattle(battle);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BATTLE ENGINE (agent vs agent)
+// ═══════════════════════════════════════════════════════════
+
+async function runBattle(battle) {
+  const {left:A, right:B} = battle;
+  let maxRounds = 30;
+
+  while (A.hp > 0 && B.hp > 0 && maxRounds-- > 0) {
+    battle.round++;
+    if (watchedBattle?.id === battle.id) {
+      document.getElementById('roundCtr').textContent = `ROUND ${battle.round}`;
+    }
+
+    // Determine turn order by speed
+    const first  = A.spd >= B.spd ? A : B;
+    const second = first === A ? B : A;
+
+    await agentTurn(first, second, battle, 'first');
+    if (B.hp <= 0 || A.hp <= 0) break;
+    await sleep(400);
+    await agentTurn(second, first, battle, 'second');
+    if (B.hp <= 0 || A.hp <= 0) break;
+
+    // Regen MP
+    A.mp = Math.min(A.maxMp, A.mp + 15);
+    B.mp = Math.min(B.maxMp, B.mp + 15);
+
+    // Tick cooldowns
+    [A,B].forEach(ag=>{
+      Object.keys(ag.cooldowns).forEach(k=>{ag.cooldowns[k]--;if(ag.cooldowns[k]<=0)delete ag.cooldowns[k];});
+    });
+
+    // DoT effects
+    [A,B].forEach(ag=>{
+      if(ag.statuses.includes('burn')||ag.statuses.includes('poison')){
+        const dot=Math.floor(ag.maxHp*0.04); ag.hp=Math.max(0,ag.hp-dot);
+      }
+    });
+
+    updateArenaView(battle);
+    updateAgentCard(A); updateAgentCard(B);
+    updateSpecCell(battle);
+    await sleep(200);
+  }
+
+  await endBattle(battle, A.hp <= 0 ? B : A);
+}
+
+async function agentTurn(attacker, defender, battle, side) {
+  if (attacker.hp <= 0) return;
+
+  // Show "thinking" for claude agents
+  const isClaude = attacker.type === 'claude';
+  if (isClaude && watchedBattle?.id === battle.id) {
+    showThinking(`${attacker.avatar} ${attacker.name} calculating move...`);
+    await sleep(600 + Math.random()*800);
+    hideThinking();
+  }
+
+  // Pick skill based on strategy
+  const skill_id = pickSkill(attacker, defender);
+  const skill = SKILLS[skill_id];
+
+  if (!skill) return;
+  attacker.mp -= skill.mp;
+  if (skill.cd > 0) attacker.cooldowns[skill_id] = skill.cd;
+
+  const isLeft = attacker === battle.left;
+  const logCls = isLeft ? 'bl-left' : 'bl-right';
+
+  if (skill.type === 'heal') {
+    const h = Math.floor(rand(skill.heal[0], skill.heal[1]) * attacker.maxHp);
+    attacker.hp = Math.min(attacker.maxHp, attacker.hp + h);
+    if (!attacker.statuses.includes('shield')) attacker.statuses.push('shield');
+    battleLog(`${attacker.avatar} ${attacker.name} casts 💚 Mend — restored ${h} HP`, logCls);
+    if (watchedBattle?.id === battle.id) floatDmg(`+${h}`, isLeft?'left':'right', true, false);
+  } else {
+    let dmg = Math.floor(rand(skill.dmg[0], skill.dmg[1]) * attacker.atk);
+
+    if (defender.statuses.includes('freeze')) {
+      dmg = Math.floor(dmg * 1.6);
+      defender.statuses = defender.statuses.filter(s => s !== 'freeze');
+    }
+    if (defender.statuses.includes('burn')) dmg = Math.floor(dmg * 1.2);
+
+    const isCrit = Math.random() < (attacker.crit + (skill.crit||0));
+    if (isCrit) dmg = Math.floor(dmg * 1.85);
+    dmg = Math.max(5, dmg - Math.floor(defender.def * 0.3));
+    defender.hp = Math.max(0, defender.hp - dmg);
+
+    battleLog(`${attacker.avatar} ${attacker.name} → ${skill.icon} ${skill.name}${isCrit?' ⚡CRIT':''} — ${dmg} dmg → ${defender.name}`, logCls);
+
+    if (watchedBattle?.id === battle.id) {
+      floatDmg(isCrit ? `💥${dmg}` : `${dmg}`, isLeft?'left':'right', false, isCrit);
+      shakeStage();
+      await sleep(120);
+      flashEl(isLeft ? 'sfRAva' : 'sfLAva');
+    }
+
+    // Apply status
+    if (skill.burn   && Math.random() < skill.burn   && !defender.statuses.includes('burn'))   { defender.statuses.push('burn');   battleLog(`🔥 ${defender.name} is BURNING!`, 'bl-sys'); }
+    if (skill.freeze && Math.random() < skill.freeze && !defender.statuses.includes('freeze')) { defender.statuses.push('freeze'); battleLog(`❄️ ${defender.name} is FROZEN!`,  'bl-sys'); }
+  }
+
+  updateArenaView(battle);
+}
+
+function pickSkill(agent, enemy) {
+  const hp_pct = agent.hp / agent.maxHp;
+  const avail = Object.entries(SKILLS)
+    .filter(([id,sk]) => agent.mp >= sk.mp && !(agent.cooldowns[id] > 0))
+    .map(([id]) => id);
+  if (!avail.length) return 'strike';
+
+  switch (agent.strategy) {
+    case 'aggressive':
+      if (avail.includes('blaze') && !enemy.statuses.includes('burn')) return 'blaze';
+      if (avail.includes('frost') && !enemy.statuses.includes('freeze')) return 'frost';
+      return avail.includes('strike') ? 'strike' : avail[0];
+
+    case 'defensive':
+      if (hp_pct < 0.35 && avail.includes('heal')) return 'heal';
+      if (avail.includes('frost')) return 'frost';
+      if (avail.includes('heal') && hp_pct < 0.55) return 'heal';
+      return avail.includes('strike') ? 'strike' : avail[0];
+
+    case 'balanced':
+    case 'claude':
+      if (hp_pct < 0.3  && avail.includes('heal'))  return 'heal';
+      if (avail.includes('frost') && !enemy.statuses.includes('freeze') && !enemy.statuses.includes('burn')) return 'frost';
+      if (avail.includes('blaze') && !enemy.statuses.includes('burn')) return 'blaze';
+      if (enemy.statuses.includes('freeze') && avail.includes('blaze')) return 'blaze';
+      return avail.includes('strike') ? 'strike' : avail[0];
+
+    case 'smart':
+      if (hp_pct < 0.28 && avail.includes('heal')) return 'heal';
+      if (enemy.statuses.includes('freeze') && avail.includes('blaze')) return 'blaze';
+      if (avail.includes('frost') && !enemy.statuses.includes('freeze')) return 'frost';
+      if (avail.includes('blaze')) return 'blaze';
+      return avail.includes('strike') ? 'strike' : avail[0];
+
+    default: // random
+      return avail[Math.floor(Math.random() * avail.length)];
+  }
+}
+
+async function endBattle(battle, winner) {
+  battle.done = true;
+  const loser = winner === battle.left ? battle.right : battle.left;
+  winner.wins++; loser.losses++;
+  winner.status = 'idle'; loser.status = 'idle';
+  winner.battleId = null; loser.battleId = null;
+
+  // Rewards
+  const earned = parseFloat(rand(0.8, 5.5).toFixed(2));
+  const xpGain = randI(100, 280);
+  winner.earned += earned;
+  winner.xp = (winner.xp || 0) + xpGain;
+  if (winner.xp > 10000) { winner.xp -= 10000; winner.lvl++; }
+
+  // Loot roll
+  const drop = Math.random() < 0.32 ? rollLoot() : null;
+  ARENA.totalEarned += earned;
+
+  battleLog(`🏆 ${winner.avatar} ${winner.name} WINS! +$${earned} | +${xpGain} XP${drop?' | 🎁 '+drop.name:''}`, 'bl-rew');
+  pushEvent(`🏆 <b>${winner.avatar} ${winner.name}</b> defeated <b>${loser.name}</b> — earned $${earned}`, 'ev-win');
+  if (drop) pushEvent(`🎁 <b>${winner.name}</b> looted <b>${drop.icon} ${drop.name}</b> ($${drop.price})`, 'ev-loot');
+
+  // Show result overlay
+  if (watchedBattle?.id === battle.id) {
+    const ov = document.getElementById('matchResult');
+    ov.style.display = 'flex';
+    const isWin = winner.isHuman;
+    ov.className = 'match-result';
+    ov.innerHTML = `
+      <div class="mr-title" style="color:${isWin?'#ffd700':'#ff3355'}">${isWin?'VICTORY!':'MATCH OVER'}</div>
+      <div class="mr-rewards">
+        <div style="color:var(--bright)">${winner.avatar} <b>${winner.name}</b> wins!</div>
+        <div style="color:var(--green)">+$${earned} earned</div>
+        ${drop?`<div style="color:var(--yellow)">🎁 ${drop.icon} ${drop.name} ($${drop.price}) dropped</div>`:''}
+        <div style="color:var(--cyan)">+${xpGain} XP</div>
+      </div>
+      <button class="mr-btn" onclick="dismissResult()">▶ NEXT MATCH</button>`;
+    setTimeout(dismissResult, 6000);
+  }
+
+  updateAgentCard(winner); updateAgentCard(loser);
+  updateLeaderboard(); updateCounters();
+  ARENA.battles = ARENA.battles.filter(b => b.id !== battle.id);
+
+  // Requeue after delay
+  setTimeout(() => {
+    if (!winner.isHuman) { winner.hp = winner.maxHp; winner.mp = 100; winner.statuses=[]; }
+    updateSpecView();
+  }, 1500);
+}
+
+function rollLoot() {
+  const total = LOOT.reduce((a,l) => a+l.chance, 0);
+  let r = Math.random()*total;
+  for (const l of LOOT) { r -= l.chance; if (r<=0) return l; }
+  return LOOT[0];
+}
+
+function dismissResult() {
+  document.getElementById('matchResult').style.display = 'none';
+  watchedBattle = null;
+  // Watch next available battle
+  if (ARENA.battles.length > 0) {
+    watchedBattle = ARENA.battles[0];
+    renderArenaView(watchedBattle);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ARENA VIEW
+// ═══════════════════════════════════════════════════════════
+
+function renderArenaView(battle) {
+  if (!battle) return;
+  const {left:A, right:B} = battle;
+
+  document.getElementById('mhLeft').textContent    = `${A.avatar} ${A.name}`;
+  document.getElementById('mhLeftSub').textContent = `${A.type} · LVL ${A.lvl} · ${A.wins}W/${A.losses}L`;
+  document.getElementById('mhRight').textContent   = `${B.avatar} ${B.name}`;
+  document.getElementById('mhRightSub').textContent= `${B.type} · LVL ${B.lvl} · ${B.wins}W/${B.losses}L`;
+
+  document.getElementById('sfLAva').textContent  = A.avatar;
+  document.getElementById('sfLName').textContent = A.name;
+  document.getElementById('sfLN2').textContent   = A.name.toUpperCase();
+  document.getElementById('sfLType').textContent = A.type;
+  document.getElementById('sfRAva').textContent  = B.avatar;
+  document.getElementById('sfRName').textContent = B.name;
+  document.getElementById('sfRN2').textContent   = B.name.toUpperCase();
+  document.getElementById('sfRType').textContent = B.type;
+  document.getElementById('roundCtr').textContent = `ROUND ${battle.round}`;
+  document.getElementById('matchResult').style.display = 'none';
+  updateArenaView(battle);
+}
+
+function updateArenaView(battle) {
+  if (!watchedBattle || watchedBattle.id !== battle.id) return;
+  const {left:A, right:B} = battle;
+
+  const lPct = Math.max(0, A.hp/A.maxHp*100).toFixed(1);
+  const rPct = Math.max(0, B.hp/B.maxHp*100).toFixed(1);
+  document.getElementById('sfLHPBar').style.width = lPct+'%';
+  document.getElementById('sfRHPBar').style.width = rPct+'%';
+  document.getElementById('sfLHP').textContent = `${Math.max(0,A.hp)}/${A.maxHp}`;
+  document.getElementById('sfRHP').textContent = `${Math.max(0,B.hp)}/${B.maxHp}`;
+
+  const sm={burn:'🔥 BURN',freeze:'❄️ FREEZE',stun:'⚡ STUN',shield:'🛡️ SHIELD',poison:'☠️ POISON'};
+  const sc={burn:'ss-burn',freeze:'ss-freeze',stun:'ss-stun',shield:'ss-shield'};
+  document.getElementById('sfLStat').innerHTML = A.statuses.map(s=>`<span class="ss ${sc[s]||''}">${sm[s]||s}</span>`).join('');
+  document.getElementById('sfRStat').innerHTML = B.statuses.map(s=>`<span class="ss ${sc[s]||''}">${sm[s]||s}</span>`).join('');
+}
+
+function floatDmg(text, side, isHeal=false, isCrit=false) {
+  const stage = document.getElementById('fightersStage');
+  const d = document.createElement('div');
+  const cls = isCrit ? 'crit' : isHeal ? 'heal' : side;
+  d.className = `dmgfl ${cls}`;
+  d.textContent = text;
+  const x = side==='left' ? 25 : 65;
+  d.style.cssText = `left:${x}%;top:30%;`;
+  stage.appendChild(d); setTimeout(()=>d.remove(), 1100);
+}
+
+function shakeStage(){const s=document.getElementById('arenaStage');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake');setTimeout(()=>s.classList.remove('shake'),320);}
+function flashEl(id){const e=document.getElementById(id);e.classList.remove('hitfl');void e.offsetWidth;e.classList.add('hitfl');setTimeout(()=>e.classList.remove('hitfl'),200);}
+function showThinking(txt){const b=document.getElementById('thinkingBar');b.style.display='flex';document.getElementById('thinkingTxt').textContent=txt;}
+function hideThinking(){document.getElementById('thinkingBar').style.display='none';}
+
+// ═══════════════════════════════════════════════════════════
+//  SPECTATE VIEW — 2×2 GRID OF LIVE BATTLES
+// ═══════════════════════════════════════════════════════════
+
+function updateSpecView() {
+  const grid = document.getElementById('specGrid');
+  grid.innerHTML = '';
+  const showing = ARENA.battles.slice(0, 4);
+
+  // Pad with "waiting" cells
+  while (showing.length < 4) showing.push(null);
+
+  showing.forEach((b, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'spec-cell';
+    cell.id = `spec-${i}`;
+    if (b) {
+      const A=b.left, B=b.right;
+      const lPct=Math.max(0,A.hp/A.maxHp*100).toFixed(0);
+      const rPct=Math.max(0,B.hp/B.maxHp*100).toFixed(0);
+      cell.innerHTML = `
+        <div class="spec-cell-title">${A.name} vs ${B.name}</div>
+        <div class="round-label">RND ${b.round}</div>
+        <div class="spec-fighters">
+          <div class="spec-f">
+            <span class="emoji">${A.avatar}</span>
+            <div class="n">${A.name}</div>
+            <div class="spec-hp"><div class="spec-hpf" style="width:${lPct}%"></div></div>
+            <div style="font-size:0.56em;color:var(--dim)">${A.hp}/${A.maxHp}</div>
+          </div>
+          <div class="spec-vs">VS</div>
+          <div class="spec-f r">
+            <span class="emoji">${B.avatar}</span>
+            <div class="n">${B.name}</div>
+            <div class="spec-hp"><div class="spec-hpf r" style="width:${rPct}%"></div></div>
+            <div style="font-size:0.56em;color:var(--dim)">${B.hp}/${B.maxHp}</div>
+          </div>
+        </div>
+        <div class="spec-log" id="slog-${b.id}">Round ${b.round} in progress...</div>`;
+      cell.onclick = () => { watchedBattle = b; renderArenaView(b); switchView('arena', document.querySelectorAll('.vtab')[0]); };
+    } else {
+      cell.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--dim)"><div style="font-size:1.5em">⏳</div><div style="font-size:0.62em;letter-spacing:1px">WAITING FOR MATCH</div></div>`;
+    }
+    grid.appendChild(cell);
+  });
+}
+
+function updateSpecCell(battle) {
+  // Update individual spec cell HP bars
+  for (let i=0; i<4; i++) {
+    const c = document.getElementById(`spec-${i}`);
+    if (!c) continue;
+  }
+  updateSpecView(); // simple full re-render for now
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEADERBOARD
+// ═══════════════════════════════════════════════════════════
+
+function updateLeaderboard() {
+  const all = [...ARENA.agents].sort((a,b) => b.wins - a.wins);
+  const body = document.getElementById('lbBody');
+  body.innerHTML = all.map((a,i) => {
+    const wr = a.wins+a.losses>0 ? Math.round(a.wins/(a.wins+a.losses)*100) : 0;
+    const rkCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
+    return `<div class="lb-row ${a.isHuman?'me':''}">
+      <div class="lb-rank ${rkCls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="lb-agent">
+        <span class="lb-ava">${a.avatar}</span>
+        <div><div class="lb-nm">${a.name}</div><div class="lb-ty">${a.type} · LVL ${a.lvl}</div></div>
+      </div>
+      <div class="lb-wins">${a.wins}</div>
+      <div class="lb-earn">$${a.earned.toFixed(0)}</div>
+      <div class="lb-rate">
+        <div>${wr}%</div>
+        <div class="bar"><div class="bfil" style="width:${wr}%"></div></div>
+      </div>
+      <div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COUNTERS
+// ═══════════════════════════════════════════════════════════
+
+function updateCounters() {
+  document.getElementById('cntAgents').textContent  = ARENA.agents.length;
+  document.getElementById('cntBattles').textContent = ARENA.totalBattles;
+  document.getElementById('cntEarned').textContent  = '$'+ARENA.totalEarned.toFixed(0);
+  document.getElementById('agentCount').textContent = ARENA.agents.length + ' ONLINE';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  USER ACTIONS
+// ═══════════════════════════════════════════════════════════
+
+function joinArena() {
+  const name   = document.getElementById('agentName').value.trim() || 'Player_'+uid().slice(0,4).toUpperCase();
+  const type   = document.getElementById('agentType').value;
+  const avatar = document.getElementById('agentAvatar').value;
+  const agent  = createAgent(name, type, avatar);
+  agent.isHuman = (type === 'human');
+  addAgent(agent);
+  document.getElementById('agentName').value = '';
+  // Queue for match
+  setTimeout(() => { if (agent.status==='idle') findMatch(); }, 500);
+}
+
+function joinAsHuman() {
+  document.getElementById('agentType').value = 'human';
+  joinArena();
+}
+
+function watchAgent(agentId) {
+  const agent = ARENA.agents.find(a => a.id === agentId);
+  if (!agent || !agent.battleId) return;
+  const battle = ARENA.battles.find(b => b.id === agent.battleId);
+  if (battle) {
+    watchedBattle = battle;
+    renderArenaView(battle);
+    switchView('arena', document.querySelectorAll('.vtab')[0]);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════════════════════════
+
+function switchView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('on'));
+  document.getElementById('view-'+id).classList.add('on');
+  if (btn) btn.classList.add('on');
+  if (id === 'leaderboard') updateLeaderboard();
+  if (id === 'spectate')    updateSpecView();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SIMULATION ENGINE — autonomous agents
+// ═══════════════════════════════════════════════════════════
+
+let simRunning = true;
+
+async function simulationLoop() {
+  while (simRunning) {
+    // Matchmake idle agents
+    const idle = ARENA.agents.filter(a => a.status === 'idle' && !a.isHuman);
+    if (idle.length >= 2) {
+      // Pick random pair
+      const idx = Math.floor(Math.random()*idle.length);
+      const a = idle[idx];
+      const remaining = idle.filter((_,i)=>i!==idx);
+      if (remaining.length) {
+        const b = remaining[Math.floor(Math.random()*remaining.length)];
+        startBattle(a, b);
+      }
+    }
+    await sleep(3000 + Math.random()*4000);
+  }
+}
+
+// Occasionally spawn new agents and fire events
+async function eventLoop() {
+  const events = [
+    () => pushEvent(`💱 <b>AlphaStrike</b> traded Dragon Sword via IntercomSwap — $233.60`, 'ev-swap'),
+    () => pushEvent(`⬆️ <b>PhoenixMage</b> leveled up to LVL ${randI(45,60)}!`, 'ev-level'),
+    () => pushEvent(`🎁 <b>NanoBot_7</b> received <b>Star Crystal</b> ($88) loot drop`, 'ev-loot'),
+    () => pushEvent(`💱 <b>GlacialWitch</b> auto-swapped 3.2 SLP via FunctionGemma (⚡ local)`, 'ev-swap'),
+    () => pushEvent(`🔥 <b>VoidRaider</b> achieved 5-win streak — ${(rand(4,12)).toFixed(1)} SLP bonus!`, 'ev-win'),
+    () => pushEvent(`🤖 New Claude agent <b>NeuralBlade</b> connecting to arena...`, 'ev-join'),
+  ];
+  while (true) {
+    await sleep(7000 + Math.random()*12000);
+    events[Math.floor(Math.random()*events.length)]();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATUS BAR CLOCK
+// ═══════════════════════════════════════════════════════════
+
+setInterval(() => {
+  document.getElementById('sbTime').textContent = now();
+}, 1000);
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+
+async function boot() {
+  // Stagger agent arrivals for dramatic effect
+  for (let i = 0; i < AGENT_TEMPLATES.length; i++) {
+    const t = AGENT_TEMPLATES[i];
+    const a = createAgent(t.name, t.type, t.avatar, t);
+    addAgent(a);
+    await sleep(300 + Math.random()*400);
+  }
+  // Start simulation loops
+  simulationLoop();
+  eventLoop();
+  // Initial leaderboard
+  setTimeout(updateLeaderboard, 500);
+}
+
+boot();
+</script>
+</body>
+</html>

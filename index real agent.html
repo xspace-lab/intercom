@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameFi Hub — Crypto Arena (Full AI)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg:     #04050f;
+  --panel:  #090916;
+  --cyan:   #00fff5;
+  --yellow: #ffe600;
+  --red:    #ff2d55;
+  --green:  #00ff88;
+  --purple: #bf5fff;
+  --orange: #ff8c00;
+  --border: rgba(0,255,245,0.15);
+  --text:   #c8d8e8;
+  --dim:    #4a5a6a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family:'Share Tech Mono', monospace;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; overflow-x:hidden;
+}
+
+body::before {
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,255,245,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,245,0.025) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+body::after {
+  content:''; position:fixed; inset:0; z-index:999; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);
+}
+
+.shell {
+  position:relative; z-index:1;
+  max-width:1280px; margin:0 auto; padding:14px;
+  display:grid; grid-template-rows:auto 1fr auto;
+  min-height:100vh; gap:12px;
+}
+
+/* ── HUD ── */
+.hud {
+  display:flex; align-items:center; justify-content:space-between;
+  border:1px solid var(--border); background:var(--panel);
+  padding:10px 18px; border-radius:4px;
+}
+.hud::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+}
+.logo {
+  font-family:'Press Start 2P',monospace; font-size:0.72em;
+  color:var(--cyan); text-shadow:0 0 20px var(--cyan); letter-spacing:2px;
+}
+.hud-stats { display:flex; gap:24px; }
+.hstat .v { font-family:'Press Start 2P',monospace; font-size:0.68em; color:var(--yellow); display:block; }
+.hstat .l { font-size:0.6em; color:var(--dim); display:block; margin-top:3px; }
+.live-dot { display:inline-flex; align-items:center; gap:6px; font-size:0.62em; color:var(--green); }
+.live-dot::before {
+  content:''; width:7px; height:7px; background:var(--green); border-radius:50%;
+  animation:blink 1.5s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(0.8);} }
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display:grid;
+  grid-template-columns:240px 1fr 240px 340px;
+  gap:12px; align-items:start;
+}
+
+/* ── PANELS ── */
+.panel {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:4px; overflow:hidden; position:relative;
+}
+.panel::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,245,0.3),transparent);
+}
+.ptitle {
+  font-family:'Press Start 2P',monospace; font-size:0.48em;
+  color:var(--cyan); letter-spacing:2px; padding:10px 14px;
+  border-bottom:1px solid var(--border); background:rgba(0,255,245,0.02);
+  display:flex; justify-content:space-between; align-items:center;
+}
+
+/* ── PLAYER ── */
+.portrait {
+  width:68px; height:68px;
+  background:linear-gradient(135deg,#0a0020,#001530);
+  border:2px solid var(--purple); border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:2.4em; margin:14px auto 10px;
+  box-shadow:0 0 20px rgba(191,95,255,0.4);
+  position:relative;
+}
+.portrait::after {
+  content:''; position:absolute; inset:-2px; border-radius:4px;
+  border:1px solid var(--purple);
+  animation:glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow { 0%{box-shadow:0 0 8px rgba(191,95,255,0.2);} 100%{box-shadow:0 0 22px rgba(191,95,255,0.7);} }
+.pname { text-align:center; font-family:'Press Start 2P',monospace; font-size:0.48em; margin-bottom:3px; }
+.pclass { text-align:center; font-size:0.65em; color:var(--purple); margin-bottom:12px; }
+.bar-r { padding:0 12px 7px; }
+.blbl { display:flex; justify-content:space-between; font-size:0.62em; margin-bottom:3px; }
+.blbl .n { color:var(--dim); } .blbl .v { color:var(--text); }
+.btrack { height:7px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+.bfill { height:100%; border-radius:2px; transition:width 0.35s ease; }
+.bfill.hp { background:linear-gradient(90deg,#ff2d55,#ff8a80); }
+.bfill.mp { background:linear-gradient(90deg,#5f5fff,#bf5fff); }
+.bfill.xp { background:linear-gradient(90deg,#ff8c00,#ffe600); }
+.srows { padding:0 12px 12px; }
+.sr { display:flex; justify-content:space-between; font-size:0.65em; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.sr:last-child { border:none; }
+.sr .k { color:var(--dim); } .sr .v { color:var(--yellow); }
+.sr .v.bump { animation:bump 0.4s ease; color:var(--green); }
+@keyframes bump { 0%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+/* ── BATTLE SCREEN ── */
+.battle-screen {
+  background:linear-gradient(180deg,#010208,#040a14,#010208);
+  border:1px solid var(--border); border-radius:4px;
+  overflow:hidden; position:relative;
+}
+.gtabs { display:flex; gap:5px; padding:8px 10px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.25); flex-wrap:wrap; }
+.gtab {
+  padding:5px 11px; border-radius:3px; border:1px solid rgba(255,255,255,0.1);
+  background:transparent; color:var(--dim); font-size:0.6em; cursor:pointer;
+  transition:all 0.15s; font-family:'Share Tech Mono',monospace;
+}
+.gtab.on { border-color:var(--cyan); color:var(--cyan); background:rgba(0,255,245,0.07); }
+.gtab:hover:not(.on) { color:var(--text); border-color:rgba(255,255,255,0.2); }
+
+.bstars { position:absolute; inset:0; pointer-events:none; }
+.bstar { position:absolute; border-radius:50%; background:white; animation:tw linear infinite; }
+@keyframes tw { 0%,100%{opacity:0.08;} 50%{opacity:0.7;} }
+.bground { position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); box-shadow:0 0 10px var(--cyan); }
+.roundbadge { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-family:'Press Start 2P',monospace; font-size:0.42em; color:var(--dim); letter-spacing:2px; }
+
+.fighters { display:flex; justify-content:space-between; align-items:flex-end; padding:24px 36px 24px; min-height:190px; position:relative; }
+
+.fw { text-align:center; position:relative; }
+.fsprite { font-size:4.6em; display:block; filter:drop-shadow(0 0 14px rgba(0,255,245,0.4)); line-height:1; transition:transform 0.12s; }
+.fw.enemy .fsprite { filter:drop-shadow(0 0 14px rgba(255,45,85,0.5)); transform:scaleX(-1); }
+.fshadow { width:55px; height:7px; background:radial-gradient(ellipse,rgba(0,0,0,0.7),transparent); margin:0 auto; }
+.fname { font-family:'Press Start 2P',monospace; font-size:0.4em; color:var(--text); margin-top:7px; }
+
+.fhpbar { width:95px; margin:0 auto 4px; }
+.fhptrack { height:4px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:2px; overflow:hidden; }
+.fhpfill { height:100%; border-radius:2px; transition:width 0.3s ease; }
+.fhp-p { background:linear-gradient(90deg,#00ff88,#00ffcc); }
+.fhp-e { background:linear-gradient(90deg,#ff2d55,#ff8c00); }
+.fhplbl { font-size:0.58em; color:var(--dim); margin-bottom:3px; display:flex; justify-content:space-between; }
+
+.vsbadge {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-family:'Press Start 2P',monospace; font-size:1.5em; color:var(--red);
+  text-shadow:0 0 28px var(--red); animation:vsbeat 1.2s ease-in-out infinite; z-index:5;
+}
+@keyframes vsbeat { 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.1);} }
+
+.dmgfloat {
+  position:absolute; pointer-events:none; font-family:'Press Start 2P',monospace; font-size:0.95em;
+  animation:fup 1s ease forwards; z-index:20; white-space:nowrap;
+}
+.dmgfloat.pd { color:var(--cyan); text-shadow:0 0 8px var(--cyan); }
+.dmgfloat.ed { color:var(--red);  text-shadow:0 0 8px var(--red); }
+.dmgfloat.cd { color:var(--yellow); font-size:1.3em; text-shadow:0 0 12px var(--yellow); }
+.dmgfloat.hd { color:var(--green); text-shadow:0 0 8px var(--green); }
+@keyframes fup { 0%{opacity:1;transform:translateY(0) scale(0.7);} 20%{transform:translateY(-10px) scale(1.1);} 100%{opacity:0;transform:translateY(-55px) scale(0.85);} }
+
+.sstrip { display:flex; gap:4px; justify-content:center; margin-top:5px; min-height:16px; flex-wrap:wrap; }
+.spill { padding:2px 6px; border-radius:2px; font-size:0.55em; animation:pin 0.2s ease; }
+@keyframes pin { from{transform:scale(0);} to{transform:scale(1);} }
+.s-burn   { background:rgba(255,140,0,0.2); color:#ffaa44; border:1px solid rgba(255,140,0,0.35); }
+.s-freeze { background:rgba(0,200,255,0.15); color:#44ddff; border:1px solid rgba(0,200,255,0.3); }
+.s-stun   { background:rgba(255,230,0,0.15); color:#ffee44; border:1px solid rgba(255,230,0,0.3); }
+.s-shield { background:rgba(100,100,255,0.2); color:#aaaaff; border:1px solid rgba(100,100,255,0.35); }
+.s-poison { background:rgba(80,255,80,0.15); color:#88ff88; border:1px solid rgba(80,255,80,0.3); }
+
+@keyframes shake { 0%,100%{transform:translate(0,0);} 20%{transform:translate(-5px,3px);} 40%{transform:translate(5px,-3px);} 60%{transform:translate(-3px,3px);} 80%{transform:translate(3px,-2px);} }
+.shake { animation:shake 0.3s ease; }
+@keyframes hitfl { 0%,100%{filter:brightness(1);} 50%{filter:brightness(3.5) saturate(0);} }
+.hitfl { animation:hitfl 0.15s ease; }
+
+.result-ov {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; background:rgba(0,0,0,0.82);
+  z-index:100; animation:ovin 0.35s ease;
+}
+@keyframes ovin { from{opacity:0;} to{opacity:1;} }
+.result-title {
+  font-family:'Press Start 2P',monospace; font-size:1.8em; text-align:center;
+  animation:rp 0.5s cubic-bezier(0.34,1.56,0.64,1); margin-bottom:16px;
+}
+@keyframes rp { from{transform:scale(0) rotate(-8deg);} to{transform:scale(1) rotate(0);} }
+.rv { text-align:center; display:flex; flex-direction:column; gap:7px; margin-bottom:20px; }
+.rv div { font-size:0.78em; animation:fup2 0.4s ease; }
+@keyframes fup2 { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+.rbtn {
+  font-family:'Press Start 2P',monospace; font-size:0.62em; padding:12px 22px;
+  border:2px solid var(--cyan); color:var(--cyan); background:rgba(0,255,245,0.07);
+  cursor:pointer; border-radius:4px; letter-spacing:2px; transition:all 0.15s;
+}
+.rbtn:hover { background:rgba(0,255,245,0.18); box-shadow:0 0 18px rgba(0,255,245,0.35); transform:scale(1.04); }
+
+.logbox { background:rgba(0,0,0,0.55); border-top:1px solid var(--border); height:76px; overflow-y:auto; padding:7px 12px; font-size:0.65em; line-height:1.7; scrollbar-width:thin; }
+.logbox::-webkit-scrollbar { width:3px; } .logbox::-webkit-scrollbar-thumb { background:rgba(0,255,245,0.25); }
+.lp { color:var(--cyan); } .le { color:var(--red); } .ls { color:var(--yellow); font-weight:bold; } .lr { color:var(--green); }
+
+.skillbar { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:10px; border-top:1px solid var(--border); background:rgba(0,0,0,0.3); }
+.skbtn {
+  background:rgba(0,255,245,0.04); border:1px solid rgba(0,255,245,0.18); border-radius:4px;
+  padding:9px 5px; cursor:pointer; text-align:center; position:relative; overflow:hidden;
+  transition:all 0.13s; font-family:'Share Tech Mono',monospace;
+}
+.skbtn:hover:not([disabled]) { background:rgba(0,255,245,0.1); border-color:var(--cyan); box-shadow:0 0 10px rgba(0,255,245,0.2); transform:translateY(-2px); }
+.skbtn:active:not([disabled]) { transform:scale(0.95); }
+.skbtn[disabled] { opacity:0.3; cursor:not-allowed; transform:none; }
+.skbtn .si { font-size:1.5em; display:block; margin-bottom:3px; }
+.skbtn .sn { font-size:0.6em; color:var(--text); display:block; }
+.skbtn .sc { font-size:0.56em; color:var(--purple); display:block; margin-top:2px; }
+.skbtn .scd { position:absolute; inset:0; background:rgba(0,0,0,0.72); display:flex; align-items:center; justify-content:center; font-family:'Press Start 2P',monospace; font-size:1.2em; color:var(--cyan); }
+
+.actstrip { display:flex; gap:7px; padding:0 10px 10px; }
+.actbtn { flex:1; padding:9px; border-radius:4px; border:1px solid; cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:0.75em; font-weight:bold; transition:all 0.13s; }
+.actbtn:hover { transform:translateY(-1px); }
+.abtnew { border-color:var(--purple); color:var(--purple); background:rgba(191,95,255,0.07); }
+.abtnew:hover { background:rgba(191,95,255,0.15); }
+.abtauto { border-color:var(--yellow); color:var(--yellow); background:rgba(255,230,0,0.05); }
+.abtauto:hover { background:rgba(255,230,0,0.13); }
+.abtauto.on { background:rgba(255,230,0,0.17); box-shadow:0 0 10px rgba(255,230,0,0.3); }
+.abtflee { border-color:var(--red); color:var(--red); background:rgba(255,45,85,0.05); }
+.abtflee:hover { background:rgba(255,45,85,0.13); }
+
+/* ── LOOT / EARN ── */
+.lootlist { padding:9px; display:flex; flex-direction:column; gap:5px; max-height:300px; overflow-y:auto; }
+.lootlist::-webkit-scrollbar { width:3px; } .lootlist::-webkit-scrollbar-thumb { background:rgba(0,255,245,0.2); }
+.lootitem { display:flex; align-items:center; gap:8px; padding:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:4px; cursor:pointer; transition:all 0.15s; animation:ld 0.35s ease; }
+.lootitem:hover { border-color:rgba(0,255,245,0.3); background:rgba(0,255,245,0.04); }
+@keyframes ld { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
+.lico { font-size:1.5em; flex-shrink:0; }
+.linf { flex:1; min-width:0; }
+.lname { font-size:0.65em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lgame { font-size:0.56em; color:var(--dim); margin-top:1px; }
+.lrar { font-size:0.52em; margin-top:2px; }
+.r-legendary { color:var(--yellow); } .r-epic { color:var(--purple); } .r-rare { color:var(--cyan); } .r-common { color:var(--dim); }
+.lprice { text-align:right; flex-shrink:0; }
+.lpval { font-size:0.65em; color:var(--green); display:block; font-weight:bold; }
+.lswap { font-size:0.52em; color:var(--cyan); background:rgba(0,255,245,0.07); border:1px solid rgba(0,255,245,0.2); border-radius:2px; padding:2px 5px; margin-top:2px; cursor:pointer; display:inline-block; }
+.lswap:hover { background:rgba(0,255,245,0.17); }
+
+.efeed { padding:8px; display:flex; flex-direction:column; gap:4px; }
+.erow { display:flex; justify-content:space-between; font-size:0.62em; padding:4px 7px; background:rgba(0,255,136,0.04); border:1px solid rgba(0,255,136,0.1); border-radius:3px; animation:ld 0.3s ease; }
+.eg { color:var(--dim); } .ev { color:var(--green); font-weight:bold; }
+.totbox { margin:7px 9px; padding:9px 12px; background:rgba(0,255,136,0.05); border:1px solid rgba(0,255,136,0.2); border-radius:4px; }
+.totbox .tl { font-size:0.57em; color:var(--dim); margin-bottom:3px; }
+.totbox .tv { font-family:'Press Start 2P',monospace; font-size:0.65em; color:var(--green); }
+
+/* ── AI CHAT ── */
+.chat-panel {
+  display:flex; flex-direction:column;
+  height:calc(100vh - 130px); min-height:480px; max-height:740px;
+}
+.chat-msgs { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:9px; }
+.chat-msgs::-webkit-scrollbar { width:3px; } .chat-msgs::-webkit-scrollbar-thumb { background:rgba(0,255,245,0.25); }
+.cbubble { max-width:88%; padding:9px 13px; border-radius:4px; font-size:0.82em; line-height:1.55; animation:ld 0.25s ease; }
+.cbubble.user { align-self:flex-end; background:rgba(191,95,255,0.2); border:1px solid rgba(191,95,255,0.35); }
+.cbubble.ai   { align-self:flex-start; background:rgba(0,255,245,0.04); border:1px solid rgba(0,255,245,0.15); color:#b8cfe0; }
+.cbubble.evt  { align-self:center; background:rgba(255,230,0,0.06); border:1px solid rgba(255,230,0,0.2); color:var(--yellow); font-size:0.72em; text-align:center; max-width:92%; }
+.tdots span { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--cyan); margin:0 2px; animation:td 1.4s ease infinite; }
+.tdots span:nth-child(2){animation-delay:.2s;} .tdots span:nth-child(3){animation-delay:.4s;}
+@keyframes td { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-5px);} }
+
+.chat-quick { display:flex; flex-wrap:wrap; gap:5px; padding:9px 12px; border-top:1px solid var(--border); }
+.cqbtn { padding:4px 10px; border-radius:3px; background:rgba(0,255,245,0.05); border:1px solid rgba(0,255,245,0.18); color:rgba(0,255,245,0.75); font-size:0.7em; cursor:pointer; transition:all 0.15s; white-space:nowrap; font-family:'Share Tech Mono',monospace; }
+.cqbtn:hover { background:rgba(0,255,245,0.13); color:var(--cyan); }
+
+.chat-inputrow { display:flex; gap:7px; padding:10px 12px; border-top:1px solid var(--border); background:rgba(0,0,0,0.2); }
+.chat-inputrow input { flex:1; padding:9px 13px; background:rgba(255,255,255,0.05); border:1px solid rgba(0,255,245,0.15); border-radius:3px; color:var(--text); font-size:0.82em; outline:none; font-family:'Share Tech Mono',monospace; }
+.chat-inputrow input:focus { border-color:rgba(0,255,245,0.4); }
+.chat-inputrow input::placeholder { color:var(--dim); }
+.sndbtn { padding:9px 16px; background:linear-gradient(135deg,var(--purple),var(--cyan)); border:none; border-radius:3px; color:white; font-weight:bold; cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:0.8em; transition:all 0.15s; }
+.sndbtn:hover { transform:scale(1.04); box-shadow:0 0 16px rgba(0,255,245,0.35); }
+.sndbtn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+/* AI hint badge */
+.ai-badge { font-size:0.55em; color:rgba(0,255,245,0.5); }
+
+/* ── TICKER ── */
+.ticker { border:1px solid var(--border); background:var(--panel); border-radius:4px; overflow:hidden; display:flex; align-items:center; height:30px; }
+.ticker-lbl { font-size:0.58em; color:var(--bg); background:var(--cyan); padding:0 10px; height:100%; display:flex; align-items:center; flex-shrink:0; font-weight:bold; letter-spacing:1px; }
+.ticker-wrap { flex:1; overflow:hidden; }
+.ticker-inner { display:flex; gap:28px; white-space:nowrap; animation:tr 22s linear infinite; padding:0 16px; }
+@keyframes tr { from{transform:translateX(0);} to{transform:translateX(-50%);} }
+.tick { font-size:0.62em; display:flex; gap:7px; align-items:center; }
+.ts { color:var(--dim); font-weight:bold; } .tv { font-family:'Press Start 2P',monospace; font-size:0.82em; }
+.tup { color:var(--green); } .tdn { color:var(--red); }
+
+/* ── TOASTS ── */
+.toasts { position:fixed; top:66px; right:14px; z-index:9000; display:flex; flex-direction:column; gap:7px; pointer-events:none; }
+.toast { font-size:0.7em; padding:9px 14px; background:var(--panel); border-radius:4px; display:flex; gap:8px; align-items:flex-start; max-width:260px; animation:tin 0.3s ease, tout 0.3s ease 3.2s forwards; border:1px solid var(--border); }
+.t-win  { border-color:rgba(0,255,136,0.4); } .t-lose { border-color:rgba(255,45,85,0.4); } .t-loot { border-color:rgba(255,230,0,0.4); }
+.t-swap { border-color:rgba(0,255,245,0.4); } .t-lvl  { border-color:rgba(191,95,255,0.55); box-shadow:0 0 18px rgba(191,95,255,0.35); }
+@keyframes tin  { from{transform:translateX(110%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+@keyframes tout { to{transform:translateX(110%);opacity:0;} }
+
+/* ── CONFIG NOTICE ── */
+.cfg-notice {
+  background:rgba(255,230,0,0.06); border:1px dashed rgba(255,230,0,0.3);
+  border-radius:4px; padding:8px 14px; font-size:0.65em; color:rgba(255,230,0,0.7);
+  margin-bottom:8px; display:flex; align-items:center; gap:8px;
+}
+.cfg-notice.hidden { display:none; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1150px) {
+  .main-grid { grid-template-columns:220px 1fr 220px; }
+  .main-grid > *:last-child { grid-column:1/-1; }
+}
+@media(max-width:780px) {
+  .main-grid { grid-template-columns:1fr; }
+  .hud { flex-direction:column; gap:10px; }
+  .hud-stats { flex-wrap:wrap; justify-content:center; }
+}
+</style>
+</head>
+<body>
+<div class="toasts" id="toasts"></div>
+
+<div class="shell">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="logo">⚡ GAMEFI HUB</div>
+    <div class="hud-stats">
+      <div class="hstat"><span class="v" id="hudWins">127</span><span class="l">WINS</span></div>
+      <div class="hstat"><span class="v" id="hudStreak">14</span><span class="l">STREAK</span></div>
+      <div class="hstat"><span class="v" id="hudEarned">$0.00</span><span class="l">TODAY</span></div>
+      <div class="hstat"><span class="v" id="hudTotal">$847.20</span><span class="l">ALL-TIME</span></div>
+    </div>
+    <div class="live-dot">LIVE</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-grid">
+
+    <!-- LEFT: PLAYER -->
+    <div>
+      <div class="panel">
+        <div class="ptitle">HERO STATS</div>
+        <div class="portrait">🧙</div>
+        <div class="pname">CRYPTOKNIGHT</div>
+        <div class="pclass">MAGE · LVL <span id="lvlNum">42</span></div>
+        <div class="bar-r">
+          <div class="blbl"><span class="n">❤️ HP</span><span class="v" id="pHPL">850/850</span></div>
+          <div class="btrack"><div class="bfill hp" id="pHPB" style="width:100%"></div></div>
+        </div>
+        <div class="bar-r">
+          <div class="blbl"><span class="n">🔷 MP</span><span class="v" id="pMPL">80/100</span></div>
+          <div class="btrack"><div class="bfill mp" id="pMPB" style="width:80%"></div></div>
+        </div>
+        <div class="bar-r" style="padding-bottom:12px">
+          <div class="blbl"><span class="n">✨ XP</span><span class="v" id="pXPL">6800/10000</span></div>
+          <div class="btrack"><div class="bfill xp" id="pXPB" style="width:68%"></div></div>
+        </div>
+        <div class="srows">
+          <div class="sr"><span class="k">ATK</span><span class="v" id="sATK">142</span></div>
+          <div class="sr"><span class="k">DEF</span><span class="v" id="sDEF">87</span></div>
+          <div class="sr"><span class="k">SPD</span><span class="v" id="sSPD">94</span></div>
+          <div class="sr"><span class="k">CRIT%</span><span class="v" id="sCRT">22%</span></div>
+          <div class="sr"><span class="k">BATTLES</span><span class="v" id="sBT">254</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: BATTLE -->
+    <div>
+      <div class="battle-screen" id="battleScreen">
+        <div class="gtabs">
+          <button class="gtab on" onclick="switchGame('axie',this)">🐉 AXIE</button>
+          <button class="gtab"    onclick="switchGame('gods',this)">⚔️ GODS</button>
+          <button class="gtab"    onclick="switchGame('defi',this)">💎 DEFI KGD</button>
+          <button class="gtab"    onclick="switchGame('star',this)">🚀 STAR ATLAS</button>
+        </div>
+        <div class="bstars" id="bstars"></div>
+        <div class="bground"></div>
+        <div class="roundbadge" id="roundBadge">ROUND 1</div>
+        <div class="vsbadge" id="vsBadge">VS</div>
+
+        <div class="fighters" id="fighters">
+          <div class="fw" id="pWrap">
+            <div class="fhpbar">
+              <div class="fhplbl"><span>HP</span><span id="pFHPT">850</span></div>
+              <div class="fhptrack"><div class="fhpfill fhp-p" id="pFHP" style="width:100%"></div></div>
+            </div>
+            <span class="fsprite" id="pSpr">🧙</span>
+            <div class="fshadow"></div>
+            <div class="fname">YOU</div>
+            <div class="sstrip" id="pStat"></div>
+          </div>
+
+          <div class="fw enemy" id="eWrap">
+            <div class="fhpbar">
+              <div class="fhplbl"><span id="eNLbl">Savage Axie</span><span id="eFHPT">650</span></div>
+              <div class="fhptrack"><div class="fhpfill fhp-e" id="eFHP" style="width:100%"></div></div>
+            </div>
+            <span class="fsprite" id="eSpr">🐉</span>
+            <div class="fshadow"></div>
+            <div class="fname" id="eNBot">SAVAGE AXIE</div>
+            <div class="sstrip" id="eStat"></div>
+          </div>
+        </div>
+
+        <div class="result-ov" id="resultOv" style="display:none"></div>
+
+        <div class="logbox" id="logBox"></div>
+
+        <div class="skillbar">
+          <button class="skbtn" id="sk-strike" onclick="castSkill('strike')"><span class="si">⚔️</span><span class="sn">STRIKE</span><span class="sc">10 MP</span></button>
+          <button class="skbtn" id="sk-blaze"  onclick="castSkill('blaze')"> <span class="si">🔥</span><span class="sn">BLAZE</span><span class="sc">25 MP</span></button>
+          <button class="skbtn" id="sk-frost"  onclick="castSkill('frost')"> <span class="si">❄️</span><span class="sn">FROST NOVA</span><span class="sc">30 MP</span></button>
+          <button class="skbtn" id="sk-heal"   onclick="castSkill('heal')">  <span class="si">💚</span><span class="sn">MEND</span><span class="sc">20 MP</span></button>
+        </div>
+
+        <div class="actstrip">
+          <button class="actbtn abtnew"  onclick="newBattle()">▶ NEW BATTLE</button>
+          <button class="actbtn abtauto" id="autoBtn" onclick="toggleAuto()">🤖 AUTO FARM</button>
+          <button class="actbtn abtflee" onclick="flee()">↩ FLEE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOT + EARN -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel">
+        <div class="ptitle">🎁 LOOT</div>
+        <div class="lootlist" id="lootList">
+          <div style="font-size:0.62em;color:var(--dim);text-align:center;padding:18px;">Win battles to earn loot!</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">💰 EARNINGS</div>
+        <div class="totbox"><div class="tl">TODAY</div><div class="tv" id="earnTotal">$0.00</div></div>
+        <div class="efeed" id="earnFeed">
+          <div style="font-size:0.58em;color:var(--dim);text-align:center;padding:6px;">No earnings yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI CHAT -->
+    <div class="panel" style="display:flex;flex-direction:column;">
+      <div class="ptitle">
+        🤖 AI COMPANION
+        <span class="ai-badge" id="aiBadge">● CLAUDE ONLINE</span>
+      </div>
+
+      <!-- API key notice — hidden once key is set -->
+      <div class="cfg-notice" id="cfgNotice">
+        ⚠️ Add your Anthropic API key below to activate Claude AI
+      </div>
+
+      <div class="chat-panel">
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="cbubble ai">
+            ⚡ <b>GameFi AI online!</b> I'm watching your battles in real-time.<br><br>
+            Ask me anything — strategy, trades, earnings analysis, market tips. I react to your wins and losses! 🎮
+          </div>
+        </div>
+        <div class="chat-quick">
+          <button class="cqbtn" onclick="cq('What skill combo should I use right now?')">⚔️ Best combo</button>
+          <button class="cqbtn" onclick="cq('Trade my Dragon Sword via IntercomSwap')">🔄 Trade asset</button>
+          <button class="cqbtn" onclick="cq('Give me my full earnings breakdown')">💰 Earnings</button>
+          <button class="cqbtn" onclick="cq('How do I counter fire enemies?')">🔥 Counter tips</button>
+          <button class="cqbtn" onclick="cq('Recommend a new GameFi game for my style')">🎯 New game</button>
+        </div>
+        <div class="chat-inputrow">
+          <input type="text" id="chatIn" placeholder="Ask your AI companion..." onkeypress="if(event.key==='Enter')sendChat()"/>
+          <button class="sndbtn" onclick="sendChat()" id="sendBtn">SEND</button>
+        </div>
+      </div>
+
+      <!-- API Key input (collapsible) -->
+      <div style="padding:8px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,0.2);">
+        <div style="font-size:0.58em;color:var(--dim);margin-bottom:5px;">ANTHROPIC API KEY (stored in memory only)</div>
+        <div style="display:flex;gap:6px;">
+          <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;padding:6px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(0,255,245,0.2);border-radius:3px;color:var(--text);font-size:0.7em;outline:none;font-family:'Share Tech Mono',monospace;"/>
+          <button onclick="setApiKey()" style="padding:6px 12px;background:rgba(0,255,245,0.1);border:1px solid rgba(0,255,245,0.3);border-radius:3px;color:var(--cyan);font-size:0.68em;cursor:pointer;font-family:'Share Tech Mono',monospace;">SET</button>
+        </div>
+
+        <!-- FunctionGemma config -->
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);">
+          <div style="font-size:0.56em;color:var(--dim);margin-bottom:4px;">FUNCTIONGEMMA ENDPOINT (optional — for ultra-fast swap routing)</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" id="fgEndpoint" value="http://localhost:8000/v1/chat/completions" style="flex:1;padding:5px 9px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:3px;color:var(--dim);font-size:0.62em;outline:none;font-family:'Share Tech Mono',monospace;"/>
+            <label style="display:flex;align-items:center;gap:5px;font-size:0.62em;color:var(--dim);cursor:pointer;">
+              <input type="checkbox" id="useFG" onchange="toggleFG(this)"/> Enable
+            </label>
+          </div>
+          <div style="font-size:0.54em;color:rgba(0,255,245,0.3);margin-top:4px;">Model: TracNetwork/functiongemma-270m-it-intercomswap-v3</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-lbl">LIVE</div>
+    <div class="ticker-wrap"><div class="ticker-inner" id="tickerInner"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG — SET YOUR API KEY HERE OR VIA THE UI
+// ═══════════════════════════════════════════════════
+let API_KEY = 'YOUR_API_KEY_HERE';
+let USE_FG  = false;
+let FG_URL  = 'http://localhost:8000/v1/chat/completions';
+
+const CLAUDE_URL = 'https://api.anthropic.com/v1/messages';
+const FG_MODEL   = 'TracNetwork/functiongemma-270m-it-intercomswap-v3';
+
+function setApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(k) {
+    API_KEY = k;
+    document.getElementById('cfgNotice').classList.add('hidden');
+    document.getElementById('aiBadge').textContent = '● CLAUDE ONLINE';
+    document.getElementById('aiBadge').style.color = 'var(--green)';
+    addChat('✅ API key set! Claude AI is now active. Ask me anything about your battles! 🎮','ai');
+    toast('✅ Claude AI activated!', 't-win');
+  }
+}
+
+function toggleFG(cb) {
+  USE_FG = cb.checked;
+  FG_URL = document.getElementById('fgEndpoint').value.trim() || FG_URL;
+  addChat(USE_FG
+    ? '⚡ FunctionGemma enabled — swap commands will route locally for ultra-fast execution!'
+    : '☁️ FunctionGemma disabled — using Claude for all responses.', 'ai');
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME DATA (identical to demo)
+// ═══════════════════════════════════════════════════
+const GAMES = {
+  axie: { label:'Axie Infinity',  token:'SLP',   tokenPrice:0.00397,
+    enemies:[
+      {name:'Savage Axie', sprite:'🐉',hp:600,atk:88, def:50,xp:120,gold:8},
+      {name:'Reptile Axie',sprite:'🦎',hp:520,atk:105,def:38,xp:140,gold:10},
+      {name:'Bug Axie',    sprite:'🐛',hp:700,atk:75, def:70,xp:160,gold:12},
+      {name:'Plant Axie',  sprite:'🌿',hp:800,atk:65, def:90,xp:180,gold:9},
+      {name:'Beast Lord',  sprite:'🦁',hp:950,atk:130,def:55,xp:250,gold:20,boss:true},
+    ]},
+  gods: { label:'Gods Unchained', token:'GODS',  tokenPrice:0.248,
+    enemies:[
+      {name:'Iron Golem',  sprite:'🗿',hp:850,atk:82, def:95,xp:130,gold:9},
+      {name:'Undead Lord', sprite:'🧟',hp:580,atk:128,def:35,xp:155,gold:11},
+      {name:'Arcane Wyrm', sprite:'🐲',hp:720,atk:112,def:52,xp:170,gold:14},
+      {name:'Storm Eagle', sprite:'🦅',hp:600,atk:118,def:42,xp:145,gold:12},
+      {name:'Titan God',   sprite:'🏛️',hp:1100,atk:145,def:80,xp:300,gold:25,boss:true},
+    ]},
+  defi: { label:'DeFi Kingdoms',  token:'JEWEL', tokenPrice:0.091,
+    enemies:[
+      {name:'Stone Giant', sprite:'🗻',hp:1000,atk:88, def:115,xp:150,gold:10},
+      {name:'Lava Troll',  sprite:'🌋',hp:750, atk:122,def:65, xp:165,gold:13},
+      {name:'Sea Serpent', sprite:'🐍',hp:900, atk:100,def:80, xp:175,gold:14},
+      {name:'Frost Witch', sprite:'🧙‍♀️',hp:680,atk:135,def:45,xp:190,gold:16},
+      {name:'Dragon King', sprite:'🔱',hp:1300,atk:160,def:100,xp:350,gold:30,boss:true},
+    ]},
+  star: { label:'Star Atlas',     token:'ATLAS', tokenPrice:0.00512,
+    enemies:[
+      {name:'Void Raider', sprite:'👾',hp:650, atk:138,def:45,xp:160,gold:12},
+      {name:'Alien Drone', sprite:'🛸',hp:500, atk:155,def:32,xp:175,gold:14},
+      {name:'War Mech',    sprite:'🤖',hp:820, atk:118,def:85,xp:185,gold:15},
+      {name:'Star Pirate', sprite:'🏴‍☠️',hp:700,atk:128,def:58,xp:170,gold:13},
+      {name:'Galactic Lord',sprite:'👽',hp:1200,atk:175,def:90,xp:400,gold:35,boss:true},
+    ]},
+};
+
+const SKILLS = {
+  strike:{name:'Strike',    icon:'⚔️',mp:10,dmgMult:[0.9,1.3], type:'phys',cd:0, critBonus:0.05},
+  blaze: {name:'Blaze',     icon:'🔥',mp:25,dmgMult:[1.2,1.8], type:'fire', cd:2, burnChance:0.55,  status:'burn'},
+  frost: {name:'Frost Nova',icon:'❄️',mp:30,dmgMult:[1.0,1.5], type:'ice',  cd:3, freezeChance:0.65,status:'freeze'},
+  heal:  {name:'Mend',      icon:'💚',mp:20,healMult:[0.15,0.2],type:'heal', cd:2, shieldChance:1.0},
+};
+
+const LOOT_TABLE = [
+  {name:'Dragon Sword',   icon:'⚔️',type:'weapon',   rarity:'legendary',price:240,game:'Axie', chance:0.04},
+  {name:'Phoenix Shield', icon:'🛡️',type:'armor',    rarity:'epic',     price:95, game:'Gods', chance:0.08},
+  {name:'Star Crystal',   icon:'💎',type:'gem',      rarity:'legendary',price:88, game:'Star', chance:0.05},
+  {name:'Void Blade',     icon:'🗡️',type:'weapon',   rarity:'epic',     price:180,game:'Star', chance:0.06},
+  {name:'JEWEL Fragment', icon:'🔮',type:'token',    rarity:'rare',     price:35, game:'DeFi', chance:0.15},
+  {name:'Speed Runes',    icon:'👟',type:'item',     rarity:'rare',     price:55, game:'Axie', chance:0.12},
+  {name:'Battle Axe',     icon:'🪓',type:'weapon',   rarity:'rare',     price:65, game:'Gods', chance:0.13},
+  {name:'Iron Helm',      icon:'⛑️',type:'armor',    rarity:'common',   price:22, game:'Gods', chance:0.22},
+  {name:'HP Potion',      icon:'🧪',type:'consumable',rarity:'common',  price:8,  game:'All',  chance:0.35},
+  {name:'MP Crystal',     icon:'🔷',type:'consumable',rarity:'common',  price:10, game:'All',  chance:0.30},
+  {name:'Cosmic Stone',   icon:'🌌',type:'gem',      rarity:'epic',     price:145,game:'Star', chance:0.07},
+  {name:'Ancient Scroll', icon:'📜',type:'item',     rarity:'rare',     price:42, game:'DeFi', chance:0.14},
+];
+
+const TICKERS = [
+  {sym:'SLP',  price:0.00397,ch:+4.2},{sym:'AXS',  price:5.82,   ch:-1.8},
+  {sym:'GODS', price:0.248,  ch:+7.8},{sym:'MANA',  price:0.31,   ch:-1.3},
+  {sym:'JEWEL',price:0.091,  ch:+2.1},{sym:'ATLAS', price:0.00512,ch:+9.4},
+  {sym:'PIXEL',price:0.127,  ch:+3.6},{sym:'ILV',   price:43.20,  ch:-0.9},
+];
+
+const SWAP_KEYWORDS = ['swap','trade','sell','list','exchange','intercomswap','nft','asset','dragon sword','phoenix shield','void blade'];
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const G = {
+  player:{hp:850,maxHp:850,mp:80,maxMp:100,atk:142,def:87,spd:94,crit:0.22,xp:6800,maxXp:10000,lvl:42,battles:254},
+  enemy:null,round:1,gameId:'axie',
+  cooldowns:{},pStatus:[],eStatus:[],
+  inBattle:false,done:false,auto:false,autoTimer:null,
+  todayEarned:0,wins:127,streak:14,total:847.20,
+};
+
+const chatHistory = []; // for Claude context
+
+// ═══════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════
+const rand  = (a,b) => Math.random()*(b-a)+a;
+const randI = (a,b) => Math.floor(rand(a,b+1));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+function toast(msg,type='t-win') {
+  const d=document.createElement('div'); d.className=`toast ${type}`; d.innerHTML=msg;
+  document.getElementById('toasts').appendChild(d); setTimeout(()=>d.remove(),3700);
+}
+function log(html,cls='') {
+  const lb=document.getElementById('logBox'); const d=document.createElement('div');
+  d.className=cls; d.innerHTML=html; lb.appendChild(d); lb.scrollTop=lb.scrollHeight;
+}
+function shake(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),350);}
+function flash(el){el.classList.remove('hitfl');void el.offsetWidth;el.classList.add('hitfl');setTimeout(()=>el.classList.remove('hitfl'),200);}
+function floatDmg(txt,cls,x,y){
+  const r=document.getElementById('fighters'); const d=document.createElement('div');
+  d.className=`dmgfloat ${cls}`; d.textContent=txt; d.style.cssText=`left:${x}%;top:${y}%;`;
+  r.appendChild(d); setTimeout(()=>d.remove(),1100);
+}
+
+// ═══════════════════════════════════════════════════
+//  UI UPDATES
+// ═══════════════════════════════════════════════════
+function updateBars() {
+  const p=G.player, e=G.enemy;
+  const ph=Math.max(0,p.hp), pp=(ph/p.maxHp*100).toFixed(1);
+  const mp=(Math.max(0,p.mp)/p.maxMp*100).toFixed(1);
+  const xp=(p.xp/p.maxXp*100).toFixed(1);
+  document.getElementById('pHPB').style.width=pp+'%';
+  document.getElementById('pMPB').style.width=mp+'%';
+  document.getElementById('pXPB').style.width=xp+'%';
+  document.getElementById('pHPL').textContent=`${ph}/${p.maxHp}`;
+  document.getElementById('pMPL').textContent=`${Math.max(0,p.mp)}/${p.maxMp}`;
+  document.getElementById('pXPL').textContent=`${p.xp.toLocaleString()}/${p.maxXp.toLocaleString()}`;
+  document.getElementById('pFHPT').textContent=ph;
+  document.getElementById('pFHP').style.width=pp+'%';
+  if(e){
+    const eh=Math.max(0,e.hp); const ep=(eh/e.maxHp*100).toFixed(1);
+    document.getElementById('eFHP').style.width=ep+'%';
+    document.getElementById('eFHPT').textContent=eh;
+  }
+}
+function renderStatuses(){
+  const m={burn:'🔥 BURN',freeze:'❄️ FREEZE',stun:'⚡ STUN',shield:'🛡️ SHIELD',poison:'☠️ POISON'};
+  const c={burn:'s-burn',freeze:'s-freeze',stun:'s-stun',shield:'s-shield',poison:'s-poison'};
+  [['pStat',G.pStatus],['eStat',G.eStatus]].forEach(([id,arr])=>{
+    document.getElementById(id).innerHTML=arr.map(s=>`<span class="spill ${c[s]||''}">${m[s]||s}</span>`).join('');
+  });
+}
+function renderSkills(){
+  Object.entries(SKILLS).forEach(([id,sk])=>{
+    const btn=document.getElementById('sk-'+id); if(!btn)return;
+    const cd=G.cooldowns[id]||0;
+    btn.disabled=G.done||!G.inBattle||G.player.mp<sk.mp||cd>0;
+    const ov=btn.querySelector('.scd'); if(ov)ov.remove();
+    if(cd>0){const o=document.createElement('div');o.className='scd';o.textContent=cd;btn.appendChild(o);}
+  });
+}
+function setSkills(on){document.querySelectorAll('.skbtn').forEach(b=>b.disabled=!on);}
+
+// ═══════════════════════════════════════════════════
+//  BATTLE SYSTEM (identical mechanics to demo)
+// ═══════════════════════════════════════════════════
+function switchGame(id,btn){
+  G.gameId=id;
+  document.querySelectorAll('.gtab').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  newBattle();
+  addChat(`Switched to ${GAMES[id].label}! Get ready to earn ${GAMES[id].token} tokens.`,'evt');
+}
+
+function newBattle(){
+  document.getElementById('resultOv').style.display='none';
+  document.getElementById('resultOv').innerHTML='';
+  const game=GAMES[G.gameId];
+  const pool=G.wins%5===4?game.enemies.filter(e=>e.boss):game.enemies.filter(e=>!e.boss);
+  const t=pool[randI(0,pool.length-1)];
+  G.enemy={...t,hp:t.hp,maxHp:t.hp};
+  G.player.hp=G.player.maxHp; G.player.mp=80;
+  G.pStatus=[]; G.eStatus=[]; G.cooldowns={}; G.round=1; G.inBattle=true; G.done=false;
+  document.getElementById('eSpr').textContent=G.enemy.sprite;
+  document.getElementById('eNLbl').textContent=G.enemy.name;
+  document.getElementById('eNBot').textContent=G.enemy.name.toUpperCase();
+  document.getElementById('roundBadge').textContent='ROUND 1';
+  document.getElementById('vsBadge').style.color=G.enemy.boss?'var(--yellow)':'var(--red)';
+  document.getElementById('logBox').innerHTML='';
+  updateBars(); renderStatuses(); renderSkills();
+  log(`⚔️ ${G.enemy.boss?'👑 BOSS! ':''}${G.enemy.sprite} <b>${G.enemy.name}</b> appears!`,'ls');
+  if(G.enemy.boss) toast(`👑 BOSS BATTLE — ${G.enemy.name}!`,'t-loot');
+}
+
+async function castSkill(id){
+  if(G.done||!G.inBattle)return;
+  const sk=SKILLS[id];
+  if(G.player.mp<sk.mp||(G.cooldowns[id]||0)>0)return;
+  setSkills(false); G.player.mp-=sk.mp;
+  if(sk.type==='heal'){
+    const h=Math.floor(rand(sk.healMult[0],sk.healMult[1])*G.player.maxHp);
+    G.player.hp=Math.min(G.player.maxHp,G.player.hp+h);
+    floatDmg(`+${h}`,'hd',22,40); log(`💚 <b>Mend</b> — restored <b>${h} HP</b>`,'lp');
+    if(!G.pStatus.includes('shield'))G.pStatus.push('shield');
+    const sp=document.getElementById('pSpr'); sp.style.transform='translateY(-18px)'; setTimeout(()=>sp.style.transform='',300);
+  } else {
+    let dmg=Math.floor(rand(sk.dmgMult[0],sk.dmgMult[1])*G.player.atk);
+    if(G.eStatus.includes('freeze')){dmg=Math.floor(dmg*1.6);G.eStatus=G.eStatus.filter(s=>s!=='freeze');log(`❄️ Frozen target: <b>+60% dmg!</b>`,'lp');}
+    if(G.eStatus.includes('burn'))dmg=Math.floor(dmg*1.2);
+    const isCrit=Math.random()<(G.player.crit+(sk.critBonus||0));
+    if(isCrit)dmg=Math.floor(dmg*1.85);
+    dmg=Math.max(5,dmg-Math.floor(G.enemy.def*0.3));
+    G.enemy.hp-=dmg;
+    const ps=document.getElementById('pSpr'); ps.style.transform='translateX(38px) scale(1.12)'; setTimeout(()=>ps.style.transform='',280);
+    await sleep(170); flash(document.getElementById('eSpr')); shake(document.getElementById('battleScreen'));
+    floatDmg(isCrit?`💥 ${dmg}`:`${dmg}`,isCrit?'cd':'pd',65,30);
+    log(`${sk.icon} <b>${sk.name}</b>${isCrit?' <span style="color:var(--yellow)">CRIT!</span>':''} — <b>${dmg}</b> dmg`,'lp');
+    if(sk.status){const ch=sk.burnChance||sk.freezeChance||0;if(Math.random()<ch&&!G.eStatus.includes(sk.status)){G.eStatus.push(sk.status);log(`✨ ${G.enemy.name} is <b>${sk.status}ed!</b>`,'ls');}}
+  }
+  if(sk.cd>0)G.cooldowns[id]=sk.cd;
+  updateBars(); renderStatuses(); renderSkills();
+  if(G.enemy.hp<=0){await sleep(280);endBattle(true);return;}
+  if(G.eStatus.includes('burn')){await sleep(250);const bd=Math.floor(G.enemy.maxHp*0.05);G.enemy.hp-=bd;floatDmg(`🔥 ${bd}`,'ed',70,55);log(`🔥 Burn: <b>${bd}</b>`,'le');updateBars();if(G.enemy.hp<=0){await sleep(250);endBattle(true);return;}}
+  await sleep(550);
+  if(G.eStatus.includes('stun')){G.eStatus=G.eStatus.filter(s=>s!=='stun');log(`⚡ ${G.enemy.name} stunned — skip turn!`,'ls');}
+  else {
+    let ed=Math.floor(rand(0.85,1.25)*G.enemy.atk);const ec=Math.random()<0.14;if(ec)ed=Math.floor(ed*1.7);
+    if(G.pStatus.includes('shield')){ed=Math.floor(ed*0.45);G.pStatus=G.pStatus.filter(s=>s!=='shield');log(`🛡️ Shield absorbs!`,'lp');}
+    ed=Math.max(3,ed-Math.floor(G.player.def*0.35));
+    G.player.hp-=ed;
+    const es=document.getElementById('eSpr');es.style.transform='scaleX(-1) translateX(38px) scale(1.12)';setTimeout(()=>es.style.transform='scaleX(-1)',270);
+    await sleep(150);flash(document.getElementById('pSpr'));
+    floatDmg(ec?`💥 ${ed}`:`${ed}`,ec?'cd':'ed',20,30);
+    log(`${G.enemy.sprite} ${G.enemy.name}${ec?' <span style="color:var(--yellow)">CRIT!</span>':''} — <b>${ed}</b>`,'le');
+    if(Math.random()<0.12){const efx=['burn','poison'];const ef=efx[randI(0,1)];if(!G.pStatus.includes(ef)){G.pStatus.push(ef);log(`⚠️ You are <b>${ef}ned!</b>`,'ls');}}
+  }
+  if(G.pStatus.includes('burn')||G.pStatus.includes('poison')){const dd=Math.floor(G.player.maxHp*0.04);G.player.hp-=dd;log(`☠️ DoT: <b>${dd}</b>`,'le');}
+  updateBars(); renderStatuses();
+  if(G.player.hp<=0){await sleep(280);endBattle(false);return;}
+  G.round++;document.getElementById('roundBadge').textContent=`ROUND ${G.round}`;
+  G.player.mp=Math.min(G.player.maxMp,G.player.mp+15);
+  Object.keys(G.cooldowns).forEach(k=>{G.cooldowns[k]--;if(G.cooldowns[k]<=0)delete G.cooldowns[k];});
+  updateBars(); renderSkills(); setSkills(true); renderSkills();
+}
+
+function endBattle(won){
+  G.done=true; G.inBattle=false; setSkills(false);
+  const ov=document.getElementById('resultOv'); ov.style.display='flex';
+  if(won){
+    G.wins++;G.streak++;
+    const game=GAMES[G.gameId];
+    const tk=rand(0.8,3.5).toFixed(2);
+    const usd=parseFloat((parseFloat(tk)*game.tokenPrice+rand(0.3,2.5)).toFixed(2));
+    const xpG=G.enemy.xp+(G.enemy.boss?150:0);
+    const gold=G.enemy.gold+randI(1,5);
+    const drop=rollLoot(!!G.enemy.boss);
+    G.todayEarned+=usd; G.total+=usd; G.player.xp+=xpG;
+    let lvlUp=false;
+    while(G.player.xp>=G.player.maxXp){G.player.xp-=G.player.maxXp;G.player.maxXp=Math.floor(G.player.maxXp*1.4);G.player.lvl++;G.player.atk+=randI(4,8);G.player.def+=randI(2,5);G.player.maxHp+=randI(30,60);lvlUp=true;}
+    document.getElementById('hudWins').textContent=G.wins;
+    document.getElementById('hudStreak').textContent=G.streak;
+    document.getElementById('hudEarned').textContent=`$${G.todayEarned.toFixed(2)}`;
+    document.getElementById('hudTotal').textContent=`$${G.total.toFixed(2)}`;
+    document.getElementById('earnTotal').textContent=`$${G.todayEarned.toFixed(2)}`;
+    document.getElementById('lvlNum').textContent=G.player.lvl;
+    document.getElementById('sATK').textContent=G.player.atk;
+    document.getElementById('sDEF').textContent=G.player.def;
+    document.getElementById('sBT').textContent=++G.player.battles;
+    updateBars();
+    addEarnRow(game,tk,usd); if(drop)addLootItem(drop);
+    log(`🏆 VICTORY! +${tk} ${game.token} (+$${usd}) | +${xpG} XP${drop?' | 🎁 '+drop.name+'!':''}`, 'lr');
+    ov.className='result-ov';
+    ov.innerHTML=`<div class="result-title" style="color:var(--yellow);text-shadow:0 0 25px var(--yellow)">VICTORY!</div>
+      <div class="rv">
+        <div style="color:var(--yellow)">💰 +${tk} ${game.token} = $${usd}</div>
+        <div style="color:var(--cyan)">✨ +${xpG} XP${lvlUp?` → LVL ${G.player.lvl}!`:''}</div>
+        <div style="color:var(--orange)">🏅 +${gold} Gold</div>
+        ${drop?`<div style="color:var(--cyan)">🎁 ${drop.icon} ${drop.name} ($${drop.price})</div>`:''}
+        ${lvlUp?`<div style="color:var(--purple);font-size:1.1em">⬆️ LEVEL UP → ${G.player.lvl}!</div>`:''}
+      </div>
+      <button class="rbtn" onclick="newBattle()">▶ NEXT BATTLE</button>`;
+    toast(`🏆 +${tk} ${game.token} ($${usd})`, 't-win');
+    if(lvlUp)toast(`⬆️ LEVEL UP! LVL ${G.player.lvl}!`, 't-lvl');
+    if(drop)toast(`🎁 ${drop.icon} ${drop.name} dropped!`, 't-loot');
+    // AI auto-comment after win
+    autoComment('win', {token:tk, tokenSymbol:game.token, usd, drop, lvlUp});
+  } else {
+    G.streak=0;G.player.hp=1;updateBars();
+    document.getElementById('hudStreak').textContent='0';
+    log(`💀 DEFEAT! ${G.enemy.name} wins...`,'le');
+    ov.className='result-ov';
+    ov.innerHTML=`<div class="result-title" style="color:var(--red);text-shadow:0 0 25px var(--red)">DEFEAT!</div>
+      <div class="rv"><div style="color:var(--red)">❌ Streak lost</div><div style="color:var(--dim);font-size:0.8em">Tip: Frost Nova → Blaze = +60% dmg!</div></div>
+      <button class="rbtn" onclick="newBattle()">↩ TRY AGAIN</button>`;
+    toast('💀 Defeated!','t-lose');
+    autoComment('loss', {enemy:G.enemy.name});
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  LOOT
+// ═══════════════════════════════════════════════════
+function rollLoot(boss){
+  if(Math.random()>(boss?0.6:0.28))return null;
+  const total=LOOT_TABLE.reduce((a,l)=>a+l.chance,0);
+  let r=Math.random()*total, i=0;
+  while(i<LOOT_TABLE.length){r-=LOOT_TABLE[i].chance;if(r<=0)return LOOT_TABLE[i];i++;}
+  return LOOT_TABLE[0];
+}
+
+function addLootItem(item){
+  const list=document.getElementById('lootList');
+  const ph=list.querySelector('[style*="text-align:center"]');if(ph)ph.remove();
+  const d=document.createElement('div'); d.className='lootitem';
+  d.innerHTML=`<span class="lico">${item.icon}</span>
+    <div class="linf"><div class="lname">${item.name}</div><div class="lgame">${item.game} · ${item.type}</div><div class="lrar r-${item.rarity}">${item.rarity.toUpperCase()}</div></div>
+    <div class="lprice"><span class="lpval">$${item.price}</span><span class="lswap" onclick="tradeItem('${item.name}',${item.price})">🔄 SWAP</span></div>`;
+  list.insertBefore(d,list.firstChild);
+  if(list.children.length>8)list.removeChild(list.lastChild);
+}
+
+function addEarnRow(game,tk,usd){
+  const feed=document.getElementById('earnFeed');
+  const ph=feed.querySelector('[style*="text-align:center"]');if(ph)ph.remove();
+  const d=document.createElement('div'); d.className='erow';
+  d.innerHTML=`<span class="eg">${game.label}</span><span class="ev">+${tk} ${game.token} ($${usd})</span>`;
+  feed.insertBefore(d,feed.firstChild);
+  if(feed.children.length>6)feed.removeChild(feed.lastChild);
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTO + FLEE
+// ═══════════════════════════════════════════════════
+function toggleAuto(){
+  G.auto=!G.auto;
+  const btn=document.getElementById('autoBtn');
+  if(G.auto){btn.classList.add('on');btn.textContent='⏹ STOP AUTO';runAuto();}
+  else{btn.classList.remove('on');btn.textContent='🤖 AUTO FARM';clearTimeout(G.autoTimer);}
+}
+function runAuto(){
+  if(!G.auto)return;
+  G.autoTimer=setTimeout(async()=>{
+    if(G.done){newBattle();setTimeout(runAuto,1100);return;}
+    if(!G.inBattle){setTimeout(runAuto,500);return;}
+    const hp=G.player.hp/G.player.maxHp;
+    let pick='strike';
+    if(hp<0.32&&G.player.mp>=20&&!(G.cooldowns['heal']>0))pick='heal';
+    else if(!(G.cooldowns['frost']>0)&&G.player.mp>=30&&!G.eStatus.includes('freeze'))pick='frost';
+    else if(!(G.cooldowns['blaze']>0)&&G.player.mp>=25)pick='blaze';
+    await castSkill(pick); runAuto();
+  }, G.done?1100:1700);
+}
+
+function flee(){
+  if(!G.inBattle||G.done)return;
+  if(Math.random()<0.6){G.done=true;G.inBattle=false;G.streak=0;log('🏃 You fled!','ls');document.getElementById('hudStreak').textContent='0';setSkills(false);toast('🏃 Escaped! Streak lost.','t-lose');setTimeout(newBattle,800);}
+  else{log('❌ Failed to flee!','le');toast('❌ Can\'t escape!','t-lose');}
+}
+
+// ═══════════════════════════════════════════════════
+//  AI CHAT — Claude + FunctionGemma
+// ═══════════════════════════════════════════════════
+function addChat(html, type='ai'){
+  const c=document.getElementById('chatMsgs');
+  const d=document.createElement('div'); d.className=`cbubble ${type}`; d.innerHTML=html;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function cq(msg){ document.getElementById('chatIn').value=msg; sendChat(); }
+
+function buildSystemPrompt(){
+  const game=GAMES[G.gameId];
+  return `You are a real-time AI companion inside a play-to-earn crypto game called GameFi Hub.
+
+CURRENT GAME STATE:
+- Player: CryptoKnight_X | Level ${G.player.lvl} | HP ${Math.max(0,G.player.hp)}/${G.player.maxHp} | MP ${G.player.mp}/${G.player.maxMp}
+- Active game: ${game.label} (earning ${game.token} tokens)
+- Current enemy: ${G.enemy?.name||'none'} | Enemy HP: ${Math.max(0,G.enemy?.hp||0)}/${G.enemy?.maxHp||0}
+- Round: ${G.round} | Wins: ${G.wins} | Streak: ${G.streak} | Today earned: $${G.todayEarned.toFixed(2)}
+- Player status effects: ${G.pStatus.join(',')||'none'} | Enemy status: ${G.eStatus.join(',')||'none'}
+- Cooldowns: ${Object.entries(G.cooldowns).map(([k,v])=>`${k}:${v}`).join(',')||'none'}
+- Stats: ATK ${G.player.atk} | DEF ${G.player.def} | CRIT ${(G.player.crit*100).toFixed(0)}%
+
+SKILL REFERENCE:
+- Strike (10 MP, phys, no CD): Basic attack. 5% crit bonus.
+- Blaze (25 MP, fire, 2CD): High dmg + 55% burn chance. Burn = 5% DoT/round. Burns boost dmg by 20%.
+- Frost Nova (30 MP, ice, 3CD): Medium dmg + 65% freeze chance. Frozen enemies take +60% dmg (consumed on hit).
+- Mend (20 MP, heal, 2CD): Heals 15-20% max HP + grants Shield (blocks 55% next hit).
+
+GAME MECHANICS:
+- IntercomSwap: Players trade in-game NFTs/tokens via IntercomSwap (BTC Lightning ↔ USDT Solana)
+- FunctionGemma: Local AI model for ultra-fast swap routing (TracNetwork/functiongemma-270m-it-intercomswap-v3)
+- Loot: Enemies drop items worth $8-$240 on wins
+- Level-up: ATK/DEF/HP scale on level up
+
+You are watching the battle in real-time. Give expert, concise advice. Reference actual game state (HP %, cooldowns, enemy name). Be enthusiastic but tactical. Use emojis. Max 3-4 sentences unless asked for detail.
+
+For trade/swap requests: Show IntercomSwap route, estimated fees (1.5% platform + gas), net receive. Ask for confirmation before executing. Mention FunctionGemma routing when relevant.`;
+}
+
+async function tradeItem(name, price){
+  // Try FunctionGemma first for swap routing
+  if(USE_FG){
+    const fgResult = await tryFunctionGemma(`Trade ${name} NFT for USDC via IntercomSwap`);
+    if(fgResult){
+      const net=(price*0.985-0.80).toFixed(2);
+      addChat(`⚡ <b>FunctionGemma routed swap</b> (local model — ultra-fast!)<br><br>
+        <b>${name}</b> → IntercomSwap → USDC<br>
+        Estimated net: <b style="color:var(--green)">$${net}</b><br>
+        Tool: ${fgResult.tool || 'execute_asset_swap'}<br><br>
+        Reply "confirm" to execute ✅`,'ai');
+      return;
+    }
+  }
+  // Fall back to asking Claude
+  cq(`I want to trade my ${name} NFT worth $${price} via IntercomSwap. Show me the best route and fees.`);
+}
+
+async function tryFunctionGemma(msg){
+  if(!USE_FG) return null;
+  try {
+    const res = await fetch(FG_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model: FG_MODEL,
+        messages:[{role:'user',content:msg}],
+        tools:[{
+          type:'function',
+          function:{
+            name:'execute_asset_swap',
+            description:'Swap a game asset or token via IntercomSwap',
+            parameters:{type:'object',properties:{
+              asset_name:{type:'string'},
+              action:{type:'string',enum:['swap','list','get_quote']},
+              price_usd:{type:'number'}
+            },required:['asset_name','action']}
+          }
+        }],
+        tool_choice:'auto'
+      })
+    });
+    if(!res.ok) return null;
+    const data = await res.json();
+    const tc = data.choices?.[0]?.message?.tool_calls?.[0];
+    if(tc) return JSON.parse(tc.function.arguments);
+    return null;
+  } catch { return null; }
+}
+
+function isSwapIntent(msg){
+  return SWAP_KEYWORDS.some(kw=>msg.toLowerCase().includes(kw));
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatIn');
+  const btn=document.getElementById('sendBtn');
+  const msg=input.value.trim(); if(!msg)return;
+  addChat(msg,'user'); input.value=''; btn.disabled=true;
+  chatHistory.push({role:'user',content:msg});
+
+  // Try FunctionGemma for swap intents
+  if(isSwapIntent(msg)&&USE_FG){
+    const fgResult=await tryFunctionGemma(msg);
+    if(fgResult){
+      const res=`⚡ <b>IntercomSwap via FunctionGemma</b> (local model!)<br><br>
+        Asset: <b>${fgResult.asset_name||'item'}</b><br>
+        Action: ${fgResult.action||'swap'}<br>
+        ${fgResult.price_usd?`Estimated: <b style="color:var(--green)">$${(fgResult.price_usd*0.985-0.80).toFixed(2)}</b> net`:''}<br><br>
+        Magnitudes faster than cloud API! Reply "confirm" to execute.`;
+      addChat(res,'ai');
+      chatHistory.push({role:'assistant',content:res});
+      btn.disabled=false; return;
+    }
+  }
+
+  // Use Claude
+  if(API_KEY==='YOUR_API_KEY_HERE'){
+    // Fallback response if no key
+    const fallbacks=[
+      `⚡ <b>Pro tip for Round ${G.round}:</b> Your HP is at ${Math.round(G.player.hp/G.player.maxHp*100)}%. ${G.player.hp/G.player.maxHp<0.4?'Cast <b>Mend</b> immediately!':'Keep pressing — you\'re in good shape!'} ${G.eStatus.includes('burn')?'Enemy is burning 🔥 — Strike finishes them!':'Try Frost Nova next for a freeze bonus.'}`,
+      `🎮 You've earned <b>$${G.todayEarned.toFixed(2)}</b> today across ${G.wins-127} wins. ${GAMES[G.gameId].label} is paying well right now! For IntercomSwap trades, add your API key for Claude AI analysis. 🚀`,
+      `💡 <b>Optimal combo:</b> Frost Nova → Blaze → Strike delivers ~3× baseline damage. Frozen enemies take +60%, then burn stacks 20% bonus. Your ${G.player.atk} ATK shreds with this! ❄️🔥⚔️`
+    ];
+    addChat(fallbacks[Math.floor(Math.random()*fallbacks.length)],'ai');
+    chatHistory.push({role:'assistant',content:fallbacks[0]});
+    btn.disabled=false; return;
+  }
+
+  // Real Claude call
+  addChat('<span class="tdots"><span></span><span></span><span></span></span>','ai');
+  try {
+    const res=await fetch(CLAUDE_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        system:buildSystemPrompt(),
+        messages:chatHistory.slice(-12)
+      })
+    });
+    const data=await res.json();
+    document.getElementById('chatMsgs').lastChild.remove();
+    let text='';
+    if(data.content)for(const b of data.content)if(b.type==='text')text+=b.text;
+    if(text){addChat(text,'ai');chatHistory.push({role:'assistant',content:data.content});}
+    else addChat('⚡ Ready to help with your battle!','ai');
+  } catch(err){
+    document.getElementById('chatMsgs').lastChild.remove();
+    addChat(`⚠️ ${err.message}. Check your API key.`,'ai');
+  }
+  btn.disabled=false;
+  document.getElementById('chatIn').focus();
+}
+
+// Auto-comment after battles (Claude or fallback)
+function autoComment(result, data){
+  setTimeout(async ()=>{
+    if(API_KEY==='YOUR_API_KEY_HERE'){
+      const wins={
+        msg:`🏆 Win! +${data.token} ${data.tokenSymbol} = <b>$${data.usd}</b>! ${data.lvlUp?`⬆️ LEVEL UP — LVL ${G.player.lvl}!`:''} Keep the streak going — you're at ${G.wins} wins! 🚀`,
+      };
+      const loses={msg:`💡 Tough one! ${G.enemy?.name} hits hard. Tip: Lead with Frost Nova to freeze, then Blaze for +60% bonus damage. Your ${G.player.def} DEF can handle it — try again!`};
+      addChat(result==='win'?wins.msg:loses.msg,'ai');
+      return;
+    }
+    // Real Claude auto-comment
+    const prompt=result==='win'
+      ?`Player just won a battle in ${GAMES[G.gameId].label}! Earned ${data.token} ${data.tokenSymbol} ($${data.usd}).${data.drop?' Loot: '+data.drop.name+'.':''} ${data.lvlUp?'Leveled up to '+G.player.lvl+'!':''} Give a 1-2 sentence enthusiastic reaction and tactical tip for next battle.`
+      :`Player just lost to ${G.enemy?.name} in ${GAMES[G.gameId].label}. HP hit zero in round ${G.round}. Give encouraging 1-2 sentence tip on how to win next time using game mechanics.`;
+    chatHistory.push({role:'user',content:prompt});
+    try {
+      const res=await fetch(CLAUDE_URL,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,system:buildSystemPrompt(),messages:chatHistory.slice(-6)})
+      });
+      const d=await res.json();
+      let t=''; if(d.content)for(const b of d.content)if(b.type==='text')t+=b.text;
+      if(t){addChat(t,'ai');chatHistory.push({role:'assistant',content:d.content});}
+    } catch{}
+  }, 1400);
+}
+
+// ═══════════════════════════════════════════════════
+//  TICKER
+// ═══════════════════════════════════════════════════
+function buildTicker(){
+  document.getElementById('tickerInner').innerHTML=
+    [...TICKERS,...TICKERS].map(t=>
+      `<div class="tick"><span class="ts">${t.sym}</span><span class="tv ${t.ch>=0?'tup':'tdn'}">$${t.price} ${t.ch>=0?'▲':'▼'}${Math.abs(t.ch)}%</span></div>`
+    ).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  STARS
+// ═══════════════════════════════════════════════════
+function buildStars(){
+  const c=document.getElementById('bstars');
+  for(let i=0;i<35;i++){
+    const s=document.createElement('div'); s.className='bstar';
+    const sz=rand(1,2.2);
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${rand(0,100)}%;top:${rand(5,88)}%;animation-duration:${rand(1.8,4.5)}s;animation-delay:${rand(0,5)}s`;
+    c.appendChild(s);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+buildStars(); buildTicker(); newBattle();
+
+// Update notice if key already hardcoded
+if(API_KEY!=='YOUR_API_KEY_HERE'){
+  document.getElementById('cfgNotice').classList.add('hidden');
+}
+
+setInterval(()=>{
+  TICKERS.forEach(t=>{t.price=parseFloat((t.price*(1+(Math.random()-0.5)*0.005)).toFixed(t.price>1?3:6));t.ch=parseFloat((t.ch+(Math.random()-0.5)*0.3).toFixed(1));});
+  buildTicker();
+},6000);
+</script>
+</body>
+</html>
