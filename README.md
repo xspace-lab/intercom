@@ -1,81 +1,272 @@
-# Intercom
+# 📚 StudyBuddy
 
-This repository is a reference implementation of the **Intercom** stack on Trac Network for an **internet of agents**.
+**Your AI Tutor & Study Companion built on Intercom + IntercomSwap**
 
-At its core, Intercom is a **peer-to-peer (P2P) network**: peers discover each other and communicate directly (with optional relaying) over the Trac/Holepunch stack (Hyperswarm/HyperDHT + Protomux). There is no central server required for sidechannel messaging.
+StudyBuddy is an intelligent tutoring system that helps students master their subjects through personalized homework help, concept explanations, and study planning. Plus, save money by trading textbooks through the IntercomSwap marketplace!
 
-Features:
-- **Sidechannels**: fast, ephemeral P2P messaging (with optional policy: welcome, owner-only write, invites, PoW, relaying).
-- **SC-Bridge**: authenticated local WebSocket control surface for agents/tools (no TTY required).
-- **Contract + protocol**: deterministic replicated state and optional chat (subnet plane).
-- **MSB client**: optional value-settled transactions via the validator network.
+## 🌟 Features
 
-Additional references: https://www.moltbook.com/post/9ddd5a47-4e8d-4f01-9908-774669a11c21 and moltbook m/intercom
+- **Step-by-Step Homework Help** - Never just get answers, learn the process
+- **Concept Explanations** - Complex topics broken down simply with analogies
+- **Custom Study Plans** - Schedules tailored to your deadlines and goals
+- **Practice Quizzes** - Test yourself on any subject
+- **Essay Assistance** - Writing help and proofreading
+- **Textbook Marketplace** - Buy, sell, or swap via IntercomSwap
+- **Progress Tracking** - Monitor study streaks and time invested
+- **Multi-Subject Support** - Math, Science, English, History, CS, and more
 
-For full, agent‑oriented instructions and operational guidance, **start with `SKILL.md`**.  
-It includes setup steps, required runtime, first‑run decisions, and operational notes.
+## 🎯 Why StudyBuddy?
 
-## Awesome Intercom
+School is challenging. StudyBuddy makes learning easier:
 
-For a curated list of agentic Intercom apps check out: https://github.com/Trac-Systems/awesome-intercom
+✨ **24/7 Tutor** - Get help anytime, on any subject
+📊 **Learn, Don't Memorize** - Understand the "why" behind every concept
+💰 **Save Money** - Trade textbooks instead of buying new ($60-80% savings)
+🔥 **Stay Motivated** - Track streaks and celebrate progress
+🎓 **Personalized** - Adapts to your grade level and learning style
+📚 **All Subjects** - One tutor for everything
 
-## What this repo is for
-- A working, pinned example to bootstrap agents and peers onto Trac Network.
-- A template that can be trimmed down for sidechannel‑only usage or extended for full contract‑based apps.
+## 🏫 Built on Intercom + IntercomSwap
 
-## How to use
-Use the **Pear runtime only** (never native node).  
-Follow the steps in `SKILL.md` to install dependencies, run the admin peer, and join peers correctly.
+### Intercom Integration:
+- Natural language homework questions
+- Conversational explanations
+- Adaptive teaching based on understanding
+- Study planning assistance
 
-## Architecture (ASCII map)
-Intercom is a single long-running Pear process that participates in three distinct networking "planes":
-- **Subnet plane**: deterministic state replication (Autobase/Hyperbee over Hyperswarm/Protomux).
-- **Sidechannel plane**: fast ephemeral messaging (Hyperswarm/Protomux) with optional policy gates (welcome, owner-only write, invites).
-- **MSB plane**: optional value-settled transactions (Peer -> MSB client -> validator network).
+### IntercomSwap Integration:
+- Student-to-student textbook marketplace
+- Trade books you're done with
+- Buy at student prices (60-80% off retail)
+- Sell your old textbooks
+- Sustainable textbook reuse
 
-```text
-                          Pear runtime (mandatory)
-                pear run . --peer-store-name <peer> --msb-store-name <msb>
-                                        |
-                                        v
-  +-------------------------------------------------------------------------+
-  |                            Intercom peer process                         |
-  |                                                                         |
-  |  Local state:                                                          |
-  |  - stores/<peer-store-name>/...   (peer identity, subnet state, etc)    |
-  |  - stores/<msb-store-name>/...    (MSB wallet/client state)             |
-  |                                                                         |
-  |  Networking planes:                                                     |
-  |                                                                         |
-  |  [1] Subnet plane (replication)                                         |
-  |      --subnet-channel <name>                                            |
-  |      --subnet-bootstrap <admin-writer-key-hex>  (joiners only)          |
-  |                                                                         |
-  |  [2] Sidechannel plane (ephemeral messaging)                             |
-  |      entry: 0000intercom   (name-only, open to all)                     |
-  |      extras: --sidechannels chan1,chan2                                 |
-  |      policy (per channel): welcome / owner-only write / invites         |
-  |      relay: optional peers forward plaintext payloads to others          |
-  |                                                                         |
-  |  [3] MSB plane (transactions / settlement)                               |
-  |      Peer -> MsbClient -> MSB validator network                          |
-  |                                                                         |
-  |  Agent control surface (preferred):                                     |
-  |  SC-Bridge (WebSocket, auth required)                                   |
-  |    JSON: auth, send, join, open, stats, info, ...                       |
-  +------------------------------+------------------------------+-----------+
-                                 |                              |
-                                 | SC-Bridge (ws://host:port)   | P2P (Hyperswarm)
-                                 v                              v
-                       +-----------------+            +-----------------------+
-                       | Agent / tooling |            | Other peers (P2P)     |
-                       | (no TTY needed) |<---------->| subnet + sidechannels |
-                       +-----------------+            +-----------------------+
+## 📦 Installation
 
-  Optional for local testing:
-  - --dht-bootstrap "<host:port,host:port>" overrides the peer's HyperDHT bootstraps
-    (all peers that should discover each other must use the same list).
+1. Clone this repository
+2. Open `interactive-demo.html` in any browser - works immediately!
+3. For full AI tutoring, use `index.html` with your Anthropic API key
+
+No build process, no dependencies - just pure HTML, CSS, and JavaScript.
+
+## 💡 Usage Examples
+
+**Math Help:**
+- "Help me solve: 2x + 5 = 13"
+- "Explain quadratic equations"
+- "I don't understand derivatives"
+- "Show me how to factor polynomials"
+
+**Science Help:**
+- "Explain photosynthesis simply"
+- "What is Newton's Third Law?"
+- "Help with my chemistry homework"
+- "Describe cellular respiration"
+
+**Study Planning:**
+- "Create a study plan for my math test tomorrow"
+- "Help me prepare for midterms"
+- "Schedule my week with 3 exams"
+- "I'm behind in biology, help me catch up"
+
+**Practice & Quizzes:**
+- "Quiz me on the Civil War"
+- "Test my knowledge of algebra"
+- "Give me practice problems"
+- "Create flashcards for vocabulary"
+
+**Essay Help:**
+- "Help me outline my history essay"
+- "Proofread my paper"
+- "How do I write a thesis statement?"
+- "Give me feedback on this paragraph"
+
+**Textbook Marketplace:**
+- "I need a calculus textbook"
+- "Find AP Chemistry books"
+- "Trade my biology book for physics"
+- "What textbooks are available?"
+
+## 🎨 Interface Components
+
+### Student Sidebar
+- **Profile Section** - Avatar, name, grade level
+- **Subject Tags** - Your current classes
+- **Study Stats** - Streak, questions asked, study time, concepts mastered
+- **Upcoming Deadlines** - Exams, essays, projects
+
+### AI Chat Interface
+- **Quick Actions** - One-click shortcuts for common tasks
+- **Natural Conversation** - Ask questions in plain English
+- **Visual Learning** - Formatted solutions with step cards
+- **Concept Tags** - Highlight key ideas
+- **Problem Cards** - Clean math problem display
+
+### Live Features
+- Real-time stat updates
+- Question counter increments
+- Streak tracking
+- Responsive mobile design
+- Color-coded subjects
+
+## 📊 What Claude Provides
+
+### Homework Solutions
+```
+• Step-by-step breakdowns
+• "Why" behind each step
+• Common mistakes to avoid
+• Practice problems
+• Check your work sections
 ```
 
+### Concept Explanations
+```
+• Simple language definitions
+• Real-world analogies
+• Visual descriptions
+• Practical applications
+• "Why it matters" context
+```
+
+### Study Planning
+```
+• Custom schedules based on deadlines
+• Time-blocked sessions
+• Break reminders
+• Subject prioritization
+• Study technique tips
+```
+
+### Practice Materials
+```
+• Subject-specific quizzes
+• Multiple choice questions
+• Short answer prompts
+• Instant grading
+• Explanations for wrong answers
+```
+
+## 🔧 Technical Details
+
+- **Frontend**: Vanilla HTML/CSS/JavaScript
+- **AI Model**: Claude Sonnet 4 via Anthropic API
+- **Marketplace**: IntercomSwap protocol integration
+- **Storage**: Browser localStorage for tracking
+- **Subjects**: Math, Science, English, History, Computer Science, and more
+
+## 🔄 IntercomSwap Textbook Marketplace
+
+### What You Can Trade:
+- Textbooks (any subject, any level)
+- Study guides and workbooks
+- Test prep materials (SAT, ACT, AP)
+- Reference books
+- Previous editions (still useful!)
+
+### How It Works:
+1. List textbooks you no longer need
+2. Browse books other students are offering
+3. Propose direct swaps or purchases
+4. Meet up or ship securely
+5. Rate your trading partner
+
+### Benefits:
+- **Save 60-80%** vs buying new
+- **Eco-friendly** - reuse instead of waste
+- **Student-to-student** - fair pricing
+- **Verified ratings** - safe trades
+- **Local & shipping** - flexible options
+
+### Example Trades:
+- "I'll trade my Bio textbook for Chemistry"
+- "Calculus book + $20 for Physics bundle"
+- "AP History study guide for English lit book"
+
+## 🎯 Use Cases
+
+### Homework Help
+- Stuck on a problem? Get step-by-step guidance
+- Don't understand a concept? Get simple explanations
+- Need practice? Get similar problems
+
+### Test Preparation
+- Create custom study schedules
+- Practice with AI-generated quizzes
+- Review weak areas identified by the AI
+- Last-minute cramming strategies
+
+### Long-Term Learning
+- Build study streaks for consistency
+- Track concepts mastered over time
+- Develop better study habits
+- Improve across all subjects
+
+### Budget-Friendly Learning
+- Trade expensive textbooks
+- Access study materials affordably
+- Build a library through swaps
+- Recoup costs when done
+
+## 🌱 Future Enhancements
+
+- Video explanations for complex topics
+- Handwriting recognition for math problems
+- Study group features (collaborative learning)
+- Parent/teacher dashboard
+- Integration with school LMS systems
+- Adaptive difficulty based on performance
+- Subject-specific specialized tutors
+- Voice input for questions
+- Mobile app versions
+- Gamification (badges, leaderboards)
+
+## 📝 Intercom + IntercomSwap Competition Entry
+
+**Trac Address**: `[trac1krxpwpfrtkwv8rz8u39f6gxwd6ccpl48vnpq44gg8lkfhk5mmp0qhhzjjp]`
+
+This is a fork of Intercom + IntercomSwap built for the Trac Systems competition. StudyBuddy demonstrates:
+
+✅ Real-world educational utility
+✅ Dual framework integration (tutoring + marketplace)
+✅ AI-powered personalized learning
+✅ Student-to-student economy (textbook swaps)
+✅ Beautiful, student-friendly UI/UX
+✅ Clear instructions for agents (SKILL.md)
+
+## ⚠️ Disclaimer
+
+StudyBuddy is an educational tool designed to help students learn. It should complement, not replace, classroom instruction and teacher guidance.
+
+**Academic Integrity:**
+- StudyBuddy teaches HOW to solve problems, not just answers
+- Encourages understanding over copying
+- Students must do their own work
+- Use responsibly and ethically
+
+**Best Practices:**
+- Try solving problems yourself first
+- Use StudyBuddy to check your work
+- Focus on learning the process
+- Ask teachers for additional help when needed
+
+## 🤝 Contributing
+
+This project is part of the Intercom + IntercomSwap ecosystem. Fork it and build your own educational tools!
+
+## 📄 License
+
+MIT License - use freely and modify
+
+## 🔗 Links
+
+- [Intercom Original](https://github.com/Trac-Systems/intercom)
+- [IntercomSwap](https://github.com/TracSystems/intercom-swap)
+- [Awesome Intercom](https://github.com/Trac-Systems/awesome-intercom)
+- [Competition Details](https://github.com/Trac-Systems/intercom/blob/main/SKILL.md)
+
 ---
-If you plan to build your own app, study the existing contract/protocol and remove example logic as needed (see `SKILL.md`).
+
+Built with 📚 for students using Claude AI, Intercom, and IntercomSwap
+
+*Learning made easier, one question at a time.* 🎓

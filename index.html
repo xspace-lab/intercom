@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy - Your AI Tutor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .student-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .grade-level {
+            font-size: 0.9em;
+            color: #718096;
+        }
+
+        .subjects-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .subjects-card h4 {
+            font-size: 0.9em;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .subject-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin: 3px;
+        }
+
+        .study-stats {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #718096;
+        }
+
+        .stat-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .upcoming-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .upcoming-card .title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 3px;
+        }
+
+        .upcoming-card .date {
+            font-size: 0.85em;
+            color: #718096;
+        }
+
+        .chat-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 650px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .quick-action {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .quick-action:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f7fafc;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #fff5f5;
+            color: #c53030;
+            font-size: 0.9em;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        .input-area button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: pulse 1.5s ease-in-out infinite;
+            margin: 0 3px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 StudyBuddy</h1>
+            <p>Your AI Tutor & Study Companion</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="profile-section">
+                    <div class="avatar">🎓</div>
+                    <div class="student-name">Sarah Student</div>
+                    <div class="grade-level">10th Grade</div>
+                </div>
+
+                <div class="subjects-card">
+                    <h4>Your Subjects</h4>
+                    <span class="subject-tag">📐 Math</span>
+                    <span class="subject-tag">🧪 Chemistry</span>
+                    <span class="subject-tag">📖 English</span>
+                    <span class="subject-tag">🌍 History</span>
+                    <span class="subject-tag">💻 CS</span>
+                </div>
+
+                <div class="study-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Study Streak</span>
+                        <span class="stat-value">12 days 🔥</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Questions Asked</span>
+                        <span class="stat-value" id="questionsCount">47</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Study Time</span>
+                        <span class="stat-value">8.5 hrs</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Concepts Mastered</span>
+                        <span class="stat-value">23</span>
+                    </div>
+                </div>
+
+                <div class="subjects-card">
+                    <h4>Upcoming Deadlines</h4>
+                    <div class="upcoming-card">
+                        <div class="title">Math Quiz - Ch 5</div>
+                        <div class="date">Tomorrow, 2:00 PM</div>
+                    </div>
+                    <div class="upcoming-card">
+                        <div class="title">Chemistry Lab Report</div>
+                        <div class="date">Friday, Feb 18</div>
+                    </div>
+                    <div class="upcoming-card">
+                        <div class="title">History Essay</div>
+                        <div class="date">Next Monday</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="sendQuickMessage('Help me solve this math problem: 2x + 5 = 13')">📐 Math Help</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Explain photosynthesis in simple terms')">🧪 Science</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Create a study plan for my math quiz tomorrow')">📅 Study Plan</button>
+                    <button class="quick-action" onclick="sendQuickMessage('I need a calculus textbook')">📚 Textbooks</button>
+                    <button class="quick-action" onclick="sendQuickMessage('Quiz me on history')">🎯 Practice</button>
+                </div>
+
+                <div class="messages" id="messages">
+                    <div class="message assistant">
+                        📚 Hey Sarah! I'm StudyBuddy, your AI tutor.
+                        <br><br>
+                        I can help you with:
+                        <br>• Step-by-step homework solutions
+                        <br>• Concept explanations in simple terms
+                        <br>• Custom study plans and schedules
+                        <br>• Practice quizzes and flashcards
+                        <br>• Essay writing and proofreading
+                        <br>• Textbook swaps via IntercomSwap
+                        <br><br>
+                        You're on a 12-day study streak! 🔥 What are we working on today?
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <input 
+                        type="text" 
+                        id="userInput" 
+                        placeholder="Ask a homework question, request help, or find study materials..."
+                        onkeypress="if(event.key==='Enter') sendMessage()"
+                    />
+                    <button onclick="sendMessage()" id="sendBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ADD YOUR ANTHROPIC API KEY HERE
+        const API_KEY = 'YOUR_API_KEY_HERE'; // Get from https://console.anthropic.com
+        
+        const API_URL = 'https://api.anthropic.com/v1/messages';
+        const conversationHistory = [];
+
+        const studentProfile = {
+            name: 'Sarah Student',
+            grade: '10th Grade',
+            subjects: ['Math', 'Chemistry', 'English', 'History', 'Computer Science'],
+            streak: 12,
+            questionsAsked: 47,
+            studyHours: 8.5,
+            conceptsMastered: 23,
+            upcomingDeadlines: [
+                { name: 'Math Quiz - Ch 5', date: 'Tomorrow, 2:00 PM' },
+                { name: 'Chemistry Lab Report', date: 'Friday, Feb 18' },
+                { name: 'History Essay', date: 'Next Monday' }
+            ]
+        };
+
+        function addMessage(content, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = content;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        function getStudentContext() {
+            return `
+Student Profile:
+- Name: ${studentProfile.name}
+- Grade Level: ${studentProfile.grade}
+- Subjects: ${studentProfile.subjects.join(', ')}
+- Study Streak: ${studentProfile.streak} days 🔥
+- Questions Asked: ${studentProfile.questionsAsked}
+- Study Time This Week: ${studentProfile.studyHours} hours
+- Concepts Mastered: ${studentProfile.conceptsMastered}
+
+Upcoming Deadlines:
+${studentProfile.upcomingDeadlines.map(d => `- ${d.name}: ${d.date}`).join('\n')}
+`;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            // Update question count
+            studentProfile.questionsAsked++;
+            document.getElementById('questionsCount').textContent = studentProfile.questionsAsked;
+
+            addMessage('<span class="loading"></span><span class="loading"></span><span class="loading"></span>', 'assistant');
+
+            conversationHistory.push({
+                role: 'user',
+                content: message
+            });
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-20250514',
+                        max_tokens: 2000,
+                        system: `You are StudyBuddy - an expert AI tutor helping students learn and succeed academically. You specialize in breaking down complex concepts into simple explanations and providing step-by-step homework help.
+
+Your teaching approach:
+✅ Explain concepts in simple, relatable terms
+✅ Show step-by-step solutions (never just give answers)
+✅ Use analogies and real-world examples
+✅ Encourage understanding over memorization
+✅ Build confidence through positive reinforcement
+✅ Adapt to student's grade level
+
+Core capabilities:
+1. Homework Help - Solve problems step-by-step with explanations
+2. Concept Explanations - Break down difficult topics simply
+3. Study Planning - Create custom study schedules
+4. Practice Quizzes - Generate questions to test knowledge
+5. Essay Assistance - Help with writing and proofreading
+6. IntercomSwap Textbooks - Help find/trade textbooks
+
+When solving problems:
+- Show each step clearly
+- Explain WHY each step is taken
+- Include a "check your work" section
+- Use problem-card and solution-step formatting
+- Tag key concepts with concept-badge
+
+When explaining concepts:
+- Start with "What is it?" in simple terms
+- Use analogies ("Think of it like...")
+- Break into digestible steps
+- Provide real-world applications
+- End with "Why it matters"
+
+When creating study plans:
+- Consider upcoming deadlines
+- Break into manageable sessions
+- Include breaks
+- Provide specific actions for each session
+- Add motivational tips
+
+For textbooks (IntercomSwap):
+- Show available books with conditions
+- Explain swap vs purchase options
+- Highlight cost savings
+- Facilitate student-to-student trades
+
+Use emojis: 📚📐🧪📖🌍💻📝🎯✅
+
+IMPORTANT: Never do homework FOR students - always teach them HOW to do it. Explain the process, not just the answer.
+
+Current Student Context:
+${getStudentContext()}
+
+Format responses with HTML when helpful:
+<div class="problem-card">math problems</div>
+<div class="solution-step">step explanations</div>
+<div class="upcoming-card">schedules/deadlines</div>
+<span class="concept-badge">key concepts</span>
+<strong>headers</strong>`,
+                        messages: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                const messages = document.getElementById('messages');
+                messages.removeChild(messages.lastChild);
+
+                let assistantMessage = '';
+                if (data.content) {
+                    for (const block of data.content) {
+                        if (block.type === 'text') {
+                            assistantMessage += block.text;
+                        }
+                    }
+                }
+
+                if (assistantMessage) {
+                    addMessage(assistantMessage, 'assistant');
+                    conversationHistory.push({
+                        role: 'assistant',
+                        content: data.content
+                    });
+                } else {
+                    addMessage('Let\'s tackle this together! 📚', 'assistant');
+                }
+
+            } catch (error) {
+                const messages = document.getElementById('messages');
+                messages.removeChild(messages.lastChild);
+                
+                addMessage(`Error: ${error.message}. Please add your API key at the top of index.html where it says 'YOUR_API_KEY_HERE'.`, 'system');
+                conversationHistory.pop();
+            }
+
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        document.getElementById('userInput').focus();
+
+        if (API_KEY === 'YOUR_API_KEY_HERE') {
+            console.warn('⚠️ Please add your Anthropic API key!');
+            console.log('Get your key from: https://console.anthropic.com');
+        }
+    </script>
+</body>
+</html>
