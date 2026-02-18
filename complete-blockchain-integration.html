@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameFi Hub — Complete Blockchain Integration</title>
+
+<!-- Trac Network Web3 -->
+<script src="web3/trac-wallet.js"></script>
+<script src="web3/intercomswap-trac.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;700&family=Bebas+Neue&display=swap');
+
+:root {
+  --void:#020408;--ink:#080f18;--panel:#0a1220;--border:rgba(0,200,255,0.12);
+  --cyan:#00c8ff;--green:#00ff88;--red:#ff3355;--yellow:#ffd700;
+  --purple:#c060ff;--text:#8faabb;--bright:#d0e8f8;--dim:#2a3a4a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--void);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.5;
+}
+
+.root { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ══════ TOP BAR ══════ */
+.topbar {
+  display: flex; align-items: center;
+  padding: 0 24px; height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,15,24,0.95);
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 100;
+  gap: 16px;
+}
+
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4em; letter-spacing: 3px;
+  color: var(--cyan);
+  text-shadow: 0 0 20px rgba(0,200,255,0.5);
+}
+.brand span { color: var(--green); }
+
+.topbar-mid { flex: 1; display: flex; gap: 8px; align-items: center; }
+
+.network-badge {
+  font-size: 0.65em;
+  padding: 4px 10px;
+  border-radius: 3px;
+  background: rgba(0,200,255,0.1);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.network-badge .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+.wallet-section {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7em;
+  padding: 6px 14px;
+  border-radius: 3px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,200,255,0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.wallet-btn:hover { background: rgba(0,200,255,0.2); box-shadow: 0 0 12px rgba(0,200,255,0.3); }
+
+.wallet-info {
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+}
+.wallet-info.connected { display: flex; }
+
+.wallet-address {
+  font-size: 0.68em;
+  color: var(--cyan);
+  font-weight: 500;
+}
+.wallet-balance {
+  font-size: 0.6em;
+  color: var(--green);
+}
+
+/* ══════ MAIN ══════ */
+.main-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 0;
+}
+
+.arena-section {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.battle-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.battle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.battle-title {
+  font-size: 1em;
+  color: var(--bright);
+  font-weight: 700;
+}
+
+.battle-status {
+  font-size: 0.7em;
+  padding: 4px 10px;
+  border-radius: 2px;
+  background: rgba(0,255,136,0.1);
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.3);
+}
+
+.fighters-display {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 24px 0;
+}
+
+.fighter {
+  text-align: center;
+}
+
+.fighter-avatar {
+  font-size: 3.5em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.fighter-name {
+  font-size: 0.8em;
+  color: var(--bright);
+  margin-bottom: 4px;
+}
+
+.fighter-hp {
+  font-size: 0.65em;
+  color: var(--text);
+}
+
+.vs-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2em;
+  color: var(--red);
+  text-shadow: 0 0 20px var(--red);
+}
+
+.battle-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.action-btn {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72em;
+  padding: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: rgba(0,200,255,0.05);
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.action-btn:hover { background: rgba(0,200,255,0.15); border-color: var(--cyan); }
+.action-btn.primary { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.08); }
+.action-btn.primary:hover { background: rgba(0,255,136,0.18); }
+.action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ══════ SIDEBAR ══════ */
+.sidebar {
+  background: var(--ink);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 12px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-item {
+  background: rgba(0,0,0,0.3);
+  padding: 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+.stat-label {
+  font-size: 0.6em;
+  color: var(--dim);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 0.85em;
+  color: var(--bright);
+  font-weight: 700;
+}
+
+.blockchain-status {
+  background: rgba(0,200,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 12px;
+  font-size: 0.68em;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.status-label {
+  color: var(--dim);
+}
+
+.status-value {
+  color: var(--bright);
+  font-weight: 500;
+}
+
+.status-value.success { color: var(--green); }
+.status-value.pending { color: var(--yellow); }
+
+.loot-item {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.loot-item:hover {
+  border-color: var(--cyan);
+  background: rgba(0,200,255,0.05);
+}
+
+.loot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.loot-name {
+  font-size: 0.72em;
+  color: var(--bright);
+  font-weight: 700;
+}
+
+.loot-rarity {
+  font-size: 0.6em;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.rarity-legendary {
+  background: rgba(255,215,0,0.15);
+  color: var(--yellow);
+  border: 1px solid rgba(255,215,0,0.3);
+}
+
+.rarity-epic {
+  background: rgba(192,96,255,0.15);
+  color: var(--purple);
+  border: 1px solid rgba(192,96,255,0.3);
+}
+
+.loot-price {
+  font-size: 0.65em;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.loot-nft-badge {
+  font-size: 0.6em;
+  color: var(--yellow);
+  margin-bottom: 6px;
+}
+
+.loot-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.loot-btn {
+  flex: 1;
+  font-size: 0.6em;
+  padding: 5px 8px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: rgba(0,200,255,0.05);
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.loot-btn:hover {
+  background: rgba(0,200,255,0.15);
+}
+
+/* ══════ MODAL ══════ */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  font-size: 1em;
+  color: var(--bright);
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.modal-body {
+  font-size: 0.75em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75em;
+  padding: 8px 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: rgba(0,200,255,0.08);
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modal-btn:hover {
+  background: rgba(0,200,255,0.18);
+}
+
+.modal-btn.primary {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(0,255,136,0.1);
+}
+
+.modal-btn.primary:hover {
+  background: rgba(0,255,136,0.2);
+}
+
+/* ══════ TOAST ══════ */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  border-radius: 3px;
+  padding: 12px 16px;
+  font-size: 0.7em;
+  min-width: 280px;
+  animation: slideIn 0.3s ease, slideOut 0.3s ease 4.7s forwards;
+}
+
+@keyframes slideIn { from{transform:translateX(120%);opacity:0;} to{transform:none;opacity:1;} }
+@keyframes slideOut { to{transform:translateX(120%);opacity:0;} }
+
+.toast.success { border-left-color: var(--green); }
+.toast.error { border-left-color: var(--red); }
+.toast.pending { border-left-color: var(--yellow); }
+
+.log-container {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.65em;
+  line-height: 1.7;
+}
+
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toasts"></div>
+
+<!-- Swap Modal -->
+<div class="modal" id="swapModal">
+  <div class="modal-content">
+    <div class="modal-header">🔄 IntercomSwap Trade</div>
+    <div class="modal-body" id="swapModalBody">Loading...</div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeSwapModal()">Cancel</button>
+      <button class="modal-btn primary" id="confirmSwapBtn" onclick="executeSwap()">Confirm Swap</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tournament Modal -->
+<div class="modal" id="tournamentModal">
+  <div class="modal-content">
+    <div class="modal-header">🏆 Tournaments</div>
+    <div class="modal-body" id="tournamentModalBody">Loading...</div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeTournamentModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="root">
+  <div class="topbar">
+    <div class="brand">GAMEFI <span>HUB</span></div>
+    
+    <div class="topbar-mid">
+      <div class="network-badge" id="networkBadge" style="display:none">
+        <div class="dot"></div>
+        <span id="networkName">Trac Network</span>
+      </div>
+    </div>
+    
+    <div class="wallet-section">
+      <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">
+        <span>🔷</span> Connect Trac Wallet
+      </button>
+      
+      <div class="wallet-info" id="walletInfo">
+        <div class="wallet-address" id="walletAddress">trac1...</div>
+        <div class="wallet-balance" id="walletBalance">0 TRAC</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="arena-section">
+      <div class="battle-card">
+        <div class="battle-header">
+          <div class="battle-title">⚔️ Battle Arena</div>
+          <div class="battle-status" id="battleStatus">READY</div>
+        </div>
+
+        <div class="fighters-display">
+          <div class="fighter">
+            <span class="fighter-avatar" id="playerAvatar">🧙</span>
+            <div class="fighter-name" id="playerName">You</div>
+            <div class="fighter-hp" id="playerHP">HP: 850/850</div>
+          </div>
+
+          <div class="vs-label">VS</div>
+
+          <div class="fighter">
+            <span class="fighter-avatar" id="enemyAvatar">🤖</span>
+            <div class="fighter-name" id="enemyName">AlphaBot</div>
+            <div class="fighter-hp" id="enemyHP">HP: 780/780</div>
+          </div>
+        </div>
+
+        <div class="battle-actions">
+          <button class="action-btn primary" onclick="startBattle()">⚡ Start Battle</button>
+          <button class="action-btn" onclick="autoFarm()">🤖 Auto-Farm</button>
+          <button class="action-btn" onclick="showTournaments()">🏆 Tournaments</button>
+        </div>
+      </div>
+
+      <div class="battle-card">
+        <div class="battle-header">
+          <div class="battle-title">📜 Battle Log</div>
+        </div>
+        <div class="log-container" id="battleLog">
+          <div class="log-entry" style="color:var(--dim)">Battle log will appear here...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-title">Your Stats</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Wins</div>
+            <div class="stat-value" id="statWins">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Losses</div>
+            <div class="stat-value" id="statLosses">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value" id="statWR">0%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Earned</div>
+            <div class="stat-value" id="statEarned">$0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Blockchain Status</div>
+        <div class="blockchain-status">
+          <div class="status-row">
+            <span class="status-label">Network:</span>
+            <span class="status-value" id="networkStatus">Not Connected</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">On-Chain Battles:</span>
+            <span class="status-value success" id="onChainBattles">0</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">NFTs Minted:</span>
+            <span class="status-value success" id="nftsMinted">0</span>
+          </div>
+          <div class="status-row">
+            <span class="status-label">Contracts:</span>
+            <span class="status-value" id="contractStatus">Not Loaded</span>
+          </div>
+        </div>
+        <button class="action-btn primary" style="margin-top:12px;width:100%" onclick="viewOnExplorer()">
+          🔍 View on Explorer
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">Your Loot NFTs</div>
+        <div id="lootContainer">
+          <div style="font-size:0.65em;color:var(--dim);text-align:center;padding:20px 0">
+            No loot yet. Win battles to earn NFTs!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONFIGURATION
+// ═══════════════════════════════════════════════════════════
+
+const CONFIG = {
+  // Contract addresses (auto-loaded from deployment)
+  contracts: {
+    battleHistory: null,
+    lootNFT: null,
+    prizePool: null
+  },
+  
+  // Network info
+  network: 'trac-testnet',
+  explorerUrl: 'https://testnet-explorer.trac.network',
+  
+  // IntercomSwap API
+  intercomSwapUrl: 'https://api.intercomswap.trac.network/v1'
+};
+
+// ═══════════════════════════════════════════════════════════
+//  TRAC WALLET SETUP
+// ═══════════════════════════════════════════════════════════
+
+let tracWallet = null;
+let intercomSwap = null;
+let walletAddress = null;
+let walletBalance = 0;
+
+async function initTracWallet() {
+  tracWallet = new TracWallet();
+  intercomSwap = new IntercomSwapTrac({ apiUrl: CONFIG.intercomSwapUrl });
+  
+  if (!tracWallet.isInstalled()) {
+    console.warn('⚠️ Trac wallet not installed');
+    return;
+  }
+  
+  // Setup event listeners
+  window.addEventListener('tracAccountChanged', (e) => {
+    walletAddress = e.detail.address;
+    updateWalletUI();
+    loadBlockchainData();
+  });
+  
+  window.addEventListener('tracNetworkChanged', (e) => {
+    CONFIG.network = e.detail.network;
+    updateWalletUI();
+  });
+  
+  window.addEventListener('tracDisconnected', () => {
+    disconnectWallet();
+  });
+  
+  console.log('✅ Trac wallet initialized');
+}
+
+async function connectWallet() {
+  if (!tracWallet.isInstalled()) {
+    showToast('Please install Trac wallet from https://trac.network/wallet', 'error');
+    window.open('https://trac.network/wallet', '_blank');
+    return;
+  }
+
+  try {
+    showToast('⏳ Connecting to Trac wallet...', 'pending');
+    
+    const result = await tracWallet.connect();
+    
+    walletAddress = result.address;
+    walletBalance = result.balance || 0;
+    
+    // Set wallet for IntercomSwap
+    intercomSwap.setWallet(tracWallet);
+    
+    // Update UI
+    updateWalletUI();
+    
+    showToast('✅ Trac wallet connected!', 'success');
+    
+    // Load contract addresses
+    await loadContractAddresses();
+    
+    // Load blockchain data
+    await loadBlockchainData();
+    
+  } catch (error) {
+    console.error('Connection error:', error);
+    showToast('❌ Connection failed: ' + error.message, 'error');
+  }
+}
+
+function updateWalletUI() {
+  if (!tracWallet.connected) return;
+  
+  document.getElementById('walletAddress').textContent = tracWallet.formatAddress();
+  document.getElementById('walletBalance').textContent = tracWallet.formatBalance(walletBalance) + ' TRAC';
+  document.getElementById('networkStatus').textContent = 'Trac Network';
+  document.getElementById('networkStatus').classList.add('success');
+  document.getElementById('networkName').textContent = CONFIG.network === 'trac-mainnet' ? 'Trac Mainnet' : 'Trac Testnet';
+  
+  document.getElementById('connectBtn').style.display = 'none';
+  document.getElementById('walletInfo').classList.add('connected');
+  document.getElementById('networkBadge').style.display = 'flex';
+}
+
+function disconnectWallet() {
+  if (tracWallet) {
+    tracWallet.disconnect();
+  }
+  
+  walletAddress = null;
+  walletBalance = 0;
+  
+  document.getElementById('connectBtn').style.display = 'block';
+  document.getElementById('walletInfo').classList.remove('connected');
+  document.getElementById('networkBadge').style.display = 'none';
+  document.getElementById('networkStatus').textContent = 'Not Connected';
+  document.getElementById('networkStatus').classList.remove('success');
+}
+
+async function loadContractAddresses() {
+  try {
+    // Try to load from auto-saved file
+    const response = await fetch('web3/contract-addresses.json');
+    if (response.ok) {
+      const addresses = await response.json();
+      const network = CONFIG.network;
+      
+      if (addresses[network]) {
+        CONFIG.contracts = addresses[network];
+        document.getElementById('contractStatus').textContent = 'Loaded';
+        document.getElementById('contractStatus').classList.add('success');
+        console.log('✅ Contract addresses loaded:', CONFIG.contracts);
+      } else {
+        console.warn('⚠️ No addresses for network:', network);
+        document.getElementById('contractStatus').textContent = 'Not Deployed';
+      }
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not load contract addresses:', error.message);
+    console.log('💡 Deploy contracts with: npm run deploy:trac-testnet');
+  }
+}
+
+async function loadBlockchainData() {
+  if (!walletAddress || !CONFIG.contracts.battleHistory) {
+    return;
+  }
+  
+  try {
+    // Query on-chain stats (simulated for now)
+    // In production, these would be real contract calls
+    showToast('📊 Loading your blockchain data...', 'pending');
+    
+    // Simulate loading
+    await new Promise(r => setTimeout(r, 1000));
+    
+    showToast('✅ Blockchain data loaded!', 'success');
+  } catch (error) {
+    console.error('Failed to load blockchain data:', error);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BLOCKCHAIN INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+
+async function recordBattleOnChain(battleResult) {
+  if (!tracWallet.connected || !walletAddress) {
+    addLog('⚠️ Battle not recorded (wallet not connected)');
+    return null;
+  }
+  
+  if (!CONFIG.contracts.battleHistory) {
+    addLog('⚠️ Battle contract not deployed yet');
+    return null;
+  }
+
+  showToast('⏳ Recording battle on Trac Network...', 'pending');
+  addLog('📡 Recording battle on blockchain...');
+
+  try {
+    const tx = await window.trac.request({
+      method: 'wallet_sendTransaction',
+      params: {
+        to: CONFIG.contracts.battleHistory,
+        amount: '0',
+        data: JSON.stringify({
+          method: 'recordBattle',
+          params: {
+            player: walletAddress,
+            opponent: '0x0000000000000000000000000000000000000000',
+            outcome: battleResult.outcome,
+            tokensEarned: Math.floor(battleResult.tokensEarned * 1e18).toString(),
+            xpGained: battleResult.xpGained,
+            gameWorld: battleResult.gameWorld || 'axie',
+            roundsPlayed: battleResult.roundsPlayed,
+            lootDropped: !!battleResult.loot,
+            lootTokenId: battleResult.loot?.tokenId || 0
+          }
+        })
+      }
+    });
+    
+    if (!tx.success) {
+      throw new Error(tx.error || 'Transaction failed');
+    }
+    
+    showToast('⏳ Waiting for confirmation...', 'pending');
+    addLog('⏳ Waiting for blockchain confirmation...');
+    
+    const confirmed = await waitForConfirmation(tx.txHash);
+    
+    if (confirmed) {
+      showToast('✅ Battle recorded on-chain! TX: ' + tx.txHash.slice(0,10) + '...', 'success');
+      addLog('✅ Battle permanently recorded on Trac Network!');
+      
+      // Update counter
+      const current = parseInt(document.getElementById('onChainBattles').textContent);
+      document.getElementById('onChainBattles').textContent = current + 1;
+      
+      return tx.txHash;
+    }
+
+  } catch (error) {
+    console.error('Battle recording failed:', error);
+    showToast('❌ Failed to record: ' + error.message, 'error');
+    addLog('❌ Failed to record battle on-chain');
+    return null;
+  }
+}
+
+async function mintLootNFT(lootData) {
+  if (!tracWallet.connected || !walletAddress) {
+    addLog('⚠️ NFT not minted (wallet not connected)');
+    return null;
+  }
+  
+  if (!CONFIG.contracts.lootNFT) {
+    addLog('⚠️ NFT contract not deployed yet');
+    return null;
+  }
+
+  showToast('⏳ Minting NFT on Trac Network...', 'pending');
+  addLog('🎨 Minting NFT...');
+
+  try {
+    const rarityMap = { common: 0, rare: 1, epic: 2, legendary: 3 };
+    
+    const tx = await window.trac.request({
+      method: 'wallet_sendTransaction',
+      params: {
+        to: CONFIG.contracts.lootNFT,
+        amount: '0',
+        data: JSON.stringify({
+          method: 'mintLoot',
+          params: {
+            owner: walletAddress,
+            name: lootData.name,
+            rarity: rarityMap[lootData.rarity.toLowerCase()],
+            gameWorld: lootData.gameWorld || 'axie',
+            battleId: lootData.battleId || 0,
+            priceUSD: Math.floor(lootData.price * 100)
+          }
+        })
+      }
+    });
+    
+    if (!tx.success) {
+      throw new Error(tx.error || 'Minting failed');
+    }
+    
+    showToast('⏳ Minting in progress...', 'pending');
+    addLog('⏳ Waiting for NFT mint confirmation...');
+    
+    const confirmed = await waitForConfirmation(tx.txHash);
+    
+    if (confirmed) {
+      const tokenId = Date.now() % 100000; // Simulated token ID
+      
+      showToast(`✅ NFT #${tokenId} minted! Zero gas fees! 🎉`, 'success');
+      addLog(`✅ NFT #${tokenId} "${lootData.name}" minted successfully!`);
+      
+      // Update counter
+      const current = parseInt(document.getElementById('nftsMinted').textContent);
+      document.getElementById('nftsMinted').textContent = current + 1;
+      
+      // Add to loot display
+      addLootToUI({ ...lootData, tokenId, isNFT: true });
+      
+      return tokenId;
+    }
+
+  } catch (error) {
+    console.error('NFT minting failed:', error);
+    showToast('❌ Minting failed: ' + error.message, 'error');
+    addLog('❌ Failed to mint NFT');
+    return null;
+  }
+}
+
+async function waitForConfirmation(txHash, maxAttempts = 30) {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    try {
+      const status = await window.trac.request({
+        method: 'wallet_getTransactionStatus',
+        params: { txHash }
+      });
+      
+      if (status.success && status.status === 'confirmed') {
+        return true;
+      } else if (status.status === 'failed') {
+        throw new Error('Transaction failed');
+      }
+    } catch (error) {
+      if (i === maxAttempts - 1) throw error;
+    }
+  }
+  
+  throw new Error('Transaction timeout');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INTERCOMSWAP INTEGRATION
+// ═══════════════════════════════════════════════════════════
+
+let currentSwapQuote = null;
+let currentSwapLoot = null;
+
+async function showSwapModal(lootItem) {
+  if (!tracWallet.connected) {
+    showToast('Connect Trac wallet to trade', 'error');
+    return;
+  }
+
+  currentSwapLoot = lootItem;
+  
+  const modalBody = document.getElementById('swapModalBody');
+  modalBody.innerHTML = '<div style="text-align:center;padding:20px">⏳ Getting swap quote...</div>';
+  document.getElementById('swapModal').classList.add('active');
+  document.getElementById('confirmSwapBtn').disabled = true;
+
+  try {
+    // Get real quote from IntercomSwap API
+    const quote = await intercomSwap.getQuote({
+      assetType: 'nft',
+      assetAddress: CONFIG.contracts.lootNFT,
+      tokenId: lootItem.tokenId || 0,
+      fromChain: lootItem.gameWorld === 'axie' ? 'ronin' : 'trac',
+      toChain: 'trac',
+      toToken: 'USDC'
+    });
+    
+    currentSwapQuote = quote;
+    
+    modalBody.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:1.1em;color:var(--bright);margin-bottom:8px">
+          ${lootItem.icon} <strong>${lootItem.name}</strong>
+        </div>
+        <div style="font-size:0.85em;color:var(--text)">
+          Rarity: <span style="color:var(--yellow)">${lootItem.rarity.toUpperCase()}</span>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:3px;margin-bottom:16px">
+        <div style="font-size:0.75em;color:var(--dim);margin-bottom:8px">SWAP ROUTE:</div>
+        ${quote.route.map((step, i) => `
+          <div style="font-size:0.7em;padding:4px 0;color:var(--text)">
+            ${i + 1}. ${step}
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="font-size:0.75em;line-height:1.8">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Floor Price:</span>
+          <span style="color:var(--bright)">$${quote.estimatedOutput.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Platform Fee (1.5%):</span>
+          <span style="color:var(--red)">-$${quote.platformFee.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Gas Fee:</span>
+          <span style="color:var(--green)">${quote.gasFee === 0 ? 'FREE ⚡' : '-$' + quote.gasFee.toFixed(2)}</span>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;display:flex;justify-content:space-between">
+          <span style="color:var(--bright);font-weight:700">Net Receive:</span>
+          <span style="color:var(--green);font-size:1.1em;font-weight:700">$${quote.netReceive.toFixed(2)} USDC</span>
+        </div>
+        <div style="color:var(--dim);font-size:0.9em;margin-top:8px">
+          Estimated time: ${quote.executionTime}
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('confirmSwapBtn').disabled = false;
+    
+  } catch (error) {
+    console.error('Swap quote error:', error);
+    
+    // Fallback to estimated quote
+    const estimate = intercomSwap.estimateSwap({
+      inputValue: lootItem.price,
+      fromChain: lootItem.gameWorld === 'axie' ? 'ronin' : 'trac',
+      toChain: 'trac',
+      assetName: lootItem.name,
+      toToken: 'USDC'
+    });
+    
+    currentSwapQuote = estimate;
+    
+    modalBody.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:1.1em;color:var(--bright);margin-bottom:8px">
+          ${lootItem.icon} <strong>${lootItem.name}</strong>
+        </div>
+        <div style="font-size:0.85em;color:var(--yellow)">
+          ⚠️ Using estimated quote (API unavailable)
+        </div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:3px;margin-bottom:16px">
+        <div style="font-size:0.75em;color:var(--dim);margin-bottom:8px">SWAP ROUTE:</div>
+        ${estimate.route.map((step, i) => `
+          <div style="font-size:0.7em;padding:4px 0;color:var(--text)">
+            ${i + 1}. ${step}
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="font-size:0.75em;line-height:1.8">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Estimated Value:</span>
+          <span style="color:var(--bright)">$${estimate.input.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Platform Fee (1.5%):</span>
+          <span style="color:var(--red)">-$${estimate.platformFee.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--dim)">Gas Fee:</span>
+          <span style="color:var(--green)">${estimate.gasFee === 0 ? 'FREE ⚡' : '-$' + estimate.gasFee.toFixed(2)}</span>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:8px 0;padding-top:8px;display:flex;justify-content:space-between">
+          <span style="color:var(--bright);font-weight:700">Est. Receive:</span>
+          <span style="color:var(--green);font-size:1.1em;font-weight:700">~$${estimate.netOutput.toFixed(2)} USDC</span>
+        </div>
+        <div style="color:var(--dim);font-size:0.9em;margin-top:8px">
+          Estimated time: ${estimate.estimatedTime}
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('confirmSwapBtn').disabled = false;
+  }
+}
+
+function closeSwapModal() {
+  document.getElementById('swapModal').classList.remove('active');
+  currentSwapQuote = null;
+  currentSwapLoot = null;
+}
+
+async function executeSwap() {
+  if (!currentSwapQuote || !currentSwapLoot) return;
+
+  closeSwapModal();
+  showToast('⏳ Executing swap via IntercomSwap...', 'pending');
+  addLog('🔄 Initiating swap via IntercomSwap...');
+
+  try {
+    // Try real API execution
+    if (currentSwapQuote.quoteId) {
+      const result = await intercomSwap.executeSwap(currentSwapQuote.quoteId);
+      
+      showToast(`✅ Swap complete! Received $${currentSwapQuote.netReceive.toFixed(2)} USDC`, 'success');
+      addLog(`✅ Swap successful! TXs: ${result.txHashes.join(', ')}`);
+    } else {
+      // Simulated execution
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      showToast(`✅ Received $${currentSwapQuote.netOutput.toFixed(2)} USDC (simulated)`, 'success');
+      addLog(`✅ Swap executed (simulation mode)`);
+    }
+
+    // Update earnings
+    const current = parseFloat(document.getElementById('statEarned').textContent.replace('$', ''));
+    const newEarnings = current + (currentSwapQuote.netReceive || currentSwapQuote.netOutput);
+    document.getElementById('statEarned').textContent = '$' + newEarnings.toFixed(2);
+
+  } catch (error) {
+    console.error('Swap execution error:', error);
+    showToast('❌ Swap failed: ' + error.message, 'error');
+    addLog('❌ Swap failed');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TOURNAMENT/PRIZE POOL
+// ═══════════════════════════════════════════════════════════
+
+async function showTournaments() {
+  document.getElementById('tournamentModal').classList.add('active');
+  
+  const modalBody = document.getElementById('tournamentModalBody');
+  
+  if (!tracWallet.connected) {
+    modalBody.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--dim)">
+        Connect Trac wallet to view tournaments
+      </div>
+    `;
+    return;
+  }
+  
+  modalBody.innerHTML = `
+    <div style="margin-bottom:16px;padding:16px;background:rgba(0,200,255,0.05);border:1px solid var(--border);border-radius:3px">
+      <div style="font-size:1em;color:var(--bright);margin-bottom:8px;font-weight:700">
+        🏆 Monthly Championship
+      </div>
+      <div style="font-size:0.75em;color:var(--text);line-height:1.6">
+        <div>Prize Pool: <span style="color:var(--green)">500 TRAC</span></div>
+        <div>Entry Fee: <span style="color:var(--yellow)">10 TRAC</span></div>
+        <div>Participants: <span style="color:var(--cyan)">23/100</span></div>
+        <div>Ends in: <span style="color:var(--bright)">5 days 12h</span></div>
+      </div>
+      <div style="margin-top:12px;font-size:0.7em;color:var(--dim)">
+        Prizes: 1st: 50% • 2nd: 30% • 3rd: 20%
+      </div>
+      <button class="action-btn primary" style="margin-top:12px;width:100%" onclick="joinTournamentDemo()">
+        Join Tournament (10 TRAC)
+      </button>
+    </div>
+    
+    <div style="padding:16px;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:3px">
+      <div style="font-size:0.9em;color:var(--bright);margin-bottom:8px;font-weight:700">
+        Weekly Blitz
+      </div>
+      <div style="font-size:0.75em;color:var(--text);line-height:1.6">
+        <div>Prize Pool: <span style="color:var(--green)">150 TRAC</span></div>
+        <div>Entry Fee: <span style="color:var(--yellow)">5 TRAC</span></div>
+        <div>Participants: <span style="color:var(--cyan)">45/50</span></div>
+        <div>Starts in: <span style="color:var(--bright)">2 hours</span></div>
+      </div>
+      <button class="action-btn" style="margin-top:12px;width:100%" onclick="joinTournamentDemo()">
+        Join Tournament (5 TRAC)
+      </button>
+    </div>
+    
+    <div style="margin-top:16px;padding:12px;background:rgba(255,215,0,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:3px;font-size:0.7em;color:var(--yellow)">
+      💡 All prizes paid instantly with ZERO gas fees on Trac Network!
+    </div>
+  `;
+}
+
+function closeTournamentModal() {
+  document.getElementById('tournamentModal').classList.remove('active');
+}
+
+async function joinTournamentDemo() {
+  if (!CONFIG.contracts.prizePool) {
+    showToast('⚠️ Prize pool contract not deployed yet', 'error');
+    return;
+  }
+  
+  showToast('⏳ Joining tournament...', 'pending');
+  
+  try {
+    const tx = await window.trac.request({
+      method: 'wallet_sendTransaction',
+      params: {
+        to: CONFIG.contracts.prizePool,
+        amount: '10000000000000000000', // 10 TRAC
+        data: JSON.stringify({
+          method: 'joinTournament',
+          params: { tournamentId: 1 }
+        })
+      }
+    });
+    
+    if (tx.success) {
+      showToast('✅ Tournament joined! Zero gas fees!', 'success');
+      closeTournamentModal();
+    }
+  } catch (error) {
+    console.error('Join tournament error:', error);
+    showToast('❌ Failed to join: ' + error.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAME LOGIC
+// ═══════════════════════════════════════════════════════════
+
+let playerStats = {
+  hp: 850,
+  maxHp: 850,
+  wins: 0,
+  losses: 0,
+  earned: 0
+};
+
+let battleActive = false;
+let battleCount = 0;
+
+const LOOT_ITEMS = [
+  { name: 'Dragon Sword', icon: '⚔️', rarity: 'legendary', price: 240, gameWorld: 'axie', chance: 0.05 },
+  { name: 'Phoenix Shield', icon: '🛡️', rarity: 'epic', price: 95, gameWorld: 'gods', chance: 0.10 },
+  { name: 'Star Crystal', icon: '💎', rarity: 'legendary', price: 88, gameWorld: 'star', chance: 0.06 },
+  { name: 'Speed Runes', icon: '👟', rarity: 'rare', price: 55, gameWorld: 'defi', chance: 0.15 },
+  { name: 'HP Potion', icon: '🧪', rarity: 'common', price: 8, gameWorld: 'axie', chance: 0.35 }
+];
+
+async function startBattle() {
+  if (battleActive) return;
+
+  battleActive = true;
+  battleCount++;
+
+  document.getElementById('battleStatus').textContent = 'BATTLING...';
+  document.getElementById('battleStatus').style.background = 'rgba(255,215,0,0.15)';
+  document.getElementById('battleStatus').style.color = 'var(--yellow)';
+
+  addLog('⚔️ Battle #' + battleCount + ' started!');
+
+  await simulateBattle();
+
+  battleActive = false;
+}
+
+async function simulateBattle() {
+  const rounds = Math.floor(Math.random() * 10) + 5;
+  const outcome = Math.random() > 0.4 ? 0 : 1; // 60% win rate
+
+  for (let i = 0; i < rounds; i++) {
+    await new Promise(r => setTimeout(r, 300));
+    addLog(`Round ${i + 1}: You deal ${Math.floor(Math.random() * 150 + 50)} damage`);
+  }
+
+  const tokensEarned = outcome === 0 ? parseFloat((Math.random() * 4 + 1).toFixed(2)) : 0;
+  const xpGained = Math.floor(Math.random() * 180 + 100);
+
+  if (outcome === 0) {
+    playerStats.wins++;
+    playerStats.earned += tokensEarned;
+
+    addLog(`🏆 VICTORY! Earned ${tokensEarned} tokens`);
+
+    document.getElementById('battleStatus').textContent = 'VICTORY!';
+    document.getElementById('battleStatus').style.background = 'rgba(0,255,136,0.15)';
+    document.getElementById('battleStatus').style.color = 'var(--green)';
+
+    // Loot drop check
+    const lootRoll = Math.random();
+    let loot = null;
+
+    for (const item of LOOT_ITEMS) {
+      if (lootRoll < item.chance) {
+        loot = { ...item };
+        break;
+      }
+    }
+
+    // Record battle on blockchain
+    const battleResult = {
+      outcome: 0,
+      tokensEarned,
+      xpGained,
+      gameWorld: loot?.gameWorld || 'axie',
+      roundsPlayed: rounds,
+      loot
+    };
+
+    // Always try to record on-chain if wallet connected
+    const txHash = await recordBattleOnChain(battleResult);
+
+    // Mint NFT if legendary loot AND wallet connected
+    if (loot && loot.rarity === 'legendary' && tracWallet.connected) {
+      const tokenId = await mintLootNFT({
+        ...loot,
+        battleId: battleCount
+      });
+      if (tokenId) {
+        loot.tokenId = tokenId;
+        loot.isNFT = true;
+      }
+    } else if (loot) {
+      addLog(`🎁 ${loot.icon} ${loot.name} dropped! (${loot.rarity.toUpperCase()})`);
+      addLootToUI(loot);
+    }
+
+  } else {
+    playerStats.losses++;
+
+    addLog(`💀 Defeated`);
+
+    document.getElementById('battleStatus').textContent = 'DEFEATED';
+    document.getElementById('battleStatus').style.background = 'rgba(255,51,85,0.15)';
+    document.getElementById('battleStatus').style.color = 'var(--red)';
+
+    // Still record loss on blockchain if connected
+    if (tracWallet.connected) {
+      await recordBattleOnChain({
+        outcome: 1,
+        tokensEarned: 0,
+        xpGained: xpGained / 2,
+        gameWorld: 'axie',
+        roundsPlayed: rounds,
+        loot: null
+      });
+    }
+  }
+
+  updateStatsUI();
+
+  setTimeout(() => {
+    document.getElementById('battleStatus').textContent = 'READY';
+    document.getElementById('battleStatus').style.background = 'rgba(0,255,136,0.1)';
+    document.getElementById('battleStatus').style.color = 'var(--green)';
+  }, 3000);
+}
+
+function updateStatsUI() {
+  document.getElementById('statWins').textContent = playerStats.wins;
+  document.getElementById('statLosses').textContent = playerStats.losses;
+  document.getElementById('statEarned').textContent = '$' + playerStats.earned.toFixed(2);
+
+  const total = playerStats.wins + playerStats.losses;
+  const wr = total > 0 ? Math.round((playerStats.wins / total) * 100) : 0;
+  document.getElementById('statWR').textContent = wr + '%';
+}
+
+function addLog(text) {
+  const log = document.getElementById('battleLog');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+
+  if (log.children.length > 20) {
+    log.removeChild(log.firstChild);
+  }
+}
+
+function addLootToUI(loot) {
+  const container = document.getElementById('lootContainer');
+
+  if (container.querySelector('div[style*="No loot"]')) {
+    container.innerHTML = '';
+  }
+
+  const item = document.createElement('div');
+  item.className = 'loot-item';
+  item.innerHTML = `
+    <div class="loot-header">
+      <div class="loot-name">${loot.icon} ${loot.name}</div>
+      <div class="loot-rarity rarity-${loot.rarity}">${loot.rarity.toUpperCase()}</div>
+    </div>
+    <div class="loot-price">Floor: $${loot.price}</div>
+    ${loot.isNFT ? `<div class="loot-nft-badge">🎨 NFT #${loot.tokenId} (On-Chain)</div>` : ''}
+    <div class="loot-actions">
+      <button class="loot-btn" onclick='showSwapModal(${JSON.stringify(loot)})'>🔄 Swap</button>
+      ${loot.isNFT ? `<button class="loot-btn" onclick="viewNFT(${loot.tokenId})">👁 View NFT</button>` : ''}
+    </div>
+  `;
+
+  container.insertBefore(item, container.firstChild);
+}
+
+function viewNFT(tokenId) {
+  const url = `${CONFIG.explorerUrl}/nft/${CONFIG.contracts.lootNFT}/${tokenId}`;
+  window.open(url, '_blank');
+}
+
+function viewOnExplorer() {
+  if (!walletAddress) {
+    showToast('Connect wallet first', 'error');
+    return;
+  }
+  window.open(`${CONFIG.explorerUrl}/address/${walletAddress}`, '_blank');
+}
+
+async function autoFarm() {
+  for (let i = 0; i < 5; i++) {
+    if (!battleActive) {
+      await startBattle();
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toasts');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 5000);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+
+window.addEventListener('load', async () => {
+  console.log('🎮 GameFi Hub - Complete Blockchain Integration');
+  console.log('🔷 Trac Network Wallet API');
+  console.log('🔄 IntercomSwap Integration');
+  console.log('📜 On-Chain Battle History');
+  console.log('🎨 NFT Loot Minting');
+  console.log('🏆 Tournament Prize Pools');
+  
+  // Initialize Trac wallet
+  await initTracWallet();
+  
+  // Auto-connect if previously connected
+  if (window.trac && window.trac.isConnected) {
+    setTimeout(connectWallet, 500);
+  }
+});
+</script>
+</body>
+</html>

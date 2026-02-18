@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameFi Hub - Play Now!</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  color: #e0e6ed;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 3em;
+  background: linear-gradient(45deg, #00d4ff, #00ff88);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #8b95a5;
+  font-size: 1.1em;
+}
+
+.game-area {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(0, 212, 255, 0.3);
+  border-radius: 10px;
+  padding: 30px;
+  margin-bottom: 20px;
+}
+
+.battle-status {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 30px;
+  color: #00ff88;
+}
+
+.fighters {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.fighter {
+  text-align: center;
+}
+
+.avatar {
+  font-size: 5em;
+  margin-bottom: 10px;
+}
+
+.hp-bar {
+  width: 200px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 15px;
+  overflow: hidden;
+  margin: 10px auto;
+  border: 2px solid #00d4ff;
+}
+
+.hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00d4ff);
+  transition: width 0.3s ease;
+}
+
+.hp-text {
+  margin-top: 10px;
+  color: #00d4ff;
+  font-weight: bold;
+}
+
+.vs {
+  font-size: 3em;
+  color: #ff3366;
+  font-weight: bold;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  max-width: 600px;
+  margin: 30px auto;
+}
+
+button {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 136, 0.2));
+  border: 2px solid #00d4ff;
+  color: white;
+  padding: 20px;
+  font-size: 1.1em;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.3s;
+  font-weight: bold;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 212, 255, 0.5);
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.4), rgba(0, 255, 136, 0.4));
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.log {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 10px;
+  height: 300px;
+  overflow-y: auto;
+  font-size: 0.9em;
+  line-height: 1.8;
+}
+
+.log-entry {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-box {
+  background: rgba(0, 212, 255, 0.1);
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+.stat-value {
+  font-size: 2em;
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.stat-label {
+  color: #8b95a5;
+  margin-top: 5px;
+}
+
+.loot-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 14, 39, 0.98);
+  border: 3px solid #ffd700;
+  border-radius: 15px;
+  padding: 40px;
+  text-align: center;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+}
+
+.loot-popup.show {
+  display: block;
+  animation: popup 0.5s ease;
+}
+
+@keyframes popup {
+  from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.loot-icon {
+  font-size: 5em;
+  margin-bottom: 20px;
+}
+
+.loot-name {
+  font-size: 2em;
+  color: #ffd700;
+  margin-bottom: 10px;
+}
+
+.loot-rarity {
+  font-size: 1.2em;
+  color: #ff6b9d;
+  margin-bottom: 20px;
+}
+
+.close-btn {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #ffd700, #ff6b9d);
+  border: none;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1 class="title">⚔️ GameFi Hub ⚔️</h1>
+    <p class="subtitle">AI-Powered Battle Arena • Play Instantly!</p>
+  </div>
+
+  <div class="game-area">
+    <div class="battle-status" id="status">Ready to Battle!</div>
+
+    <div class="fighters">
+      <div class="fighter">
+        <div class="avatar">🧙‍♂️</div>
+        <div>YOU</div>
+        <div class="hp-bar">
+          <div class="hp-fill" id="playerHP" style="width: 100%"></div>
+        </div>
+        <div class="hp-text" id="playerHPText">850 / 850 HP</div>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="fighter">
+        <div class="avatar" id="enemyAvatar">🤖</div>
+        <div id="enemyName">AI Bot</div>
+        <div class="hp-bar">
+          <div class="hp-fill" id="enemyHP" style="width: 100%"></div>
+        </div>
+        <div class="hp-text" id="enemyHPText">750 / 750 HP</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button onclick="useSkill('strike')" id="btnStrike">
+        ⚔️ Strike<br><small>80-120 dmg</small>
+      </button>
+      <button onclick="useSkill('blaze')" id="btnBlaze">
+        🔥 Blaze<br><small>100-150 dmg + burn</small>
+      </button>
+      <button onclick="useSkill('frost')" id="btnFrost">
+        ❄️ Frost<br><small>90-140 dmg + freeze</small>
+      </button>
+      <button onclick="useSkill('heal')" id="btnHeal">
+        💚 Heal<br><small>+150-200 HP</small>
+      </button>
+    </div>
+
+    <div class="log" id="log">
+      <div class="log-entry">🎮 Welcome! Choose a skill to start battling!</div>
+      <div class="log-entry">💡 Tip: Use Frost to freeze, then Blaze for massive damage!</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-value" id="wins">0</div>
+      <div class="stat-label">Wins</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="losses">0</div>
+      <div class="stat-label">Losses</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="winrate">0%</div>
+      <div class="stat-label">Win Rate</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-value" id="earned">$0</div>
+      <div class="stat-label">Earned</div>
+    </div>
+  </div>
+</div>
+
+<div class="loot-popup" id="lootPopup">
+  <div class="loot-icon" id="lootIcon">⚔️</div>
+  <div class="loot-name" id="lootName">Dragon Sword</div>
+  <div class="loot-rarity" id="lootRarity">LEGENDARY</div>
+  <div style="color: #00ff88; font-size: 1.5em; margin: 20px 0;">
+    Value: <span id="lootValue">$240</span>
+  </div>
+  <button class="close-btn" onclick="closeLoot()">Awesome! 🎉</button>
+</div>
+
+<script>
+let playerHP = 850, playerMaxHP = 850;
+let enemyHP = 750, enemyMaxHP = 750;
+let enemyFrozen = false;
+let enemyBurning = 0;
+let battleActive = false;
+let wins = 0, losses = 0, earned = 0;
+
+const LOOT = [
+  {name: 'Dragon Sword', icon: '⚔️', rarity: 'LEGENDARY', value: 240, chance: 0.05},
+  {name: 'Phoenix Shield', icon: '🛡️', rarity: 'EPIC', value: 95, chance: 0.10},
+  {name: 'Star Crystal', icon: '💎', rarity: 'LEGENDARY', value: 88, chance: 0.08},
+  {name: 'Magic Potion', icon: '🧪', rarity: 'RARE', value: 35, chance: 0.20},
+];
+
+function log(msg) {
+  const logDiv = document.getElementById('log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  logDiv.appendChild(entry);
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function updateHP() {
+  const playerPct = (playerHP / playerMaxHP) * 100;
+  const enemyPct = (enemyHP / enemyMaxHP) * 100;
+  
+  document.getElementById('playerHP').style.width = playerPct + '%';
+  document.getElementById('enemyHP').style.width = enemyPct + '%';
+  document.getElementById('playerHPText').textContent = `${playerHP} / ${playerMaxHP} HP`;
+  document.getElementById('enemyHPText').textContent = `${enemyHP} / ${enemyMaxHP} HP`;
+}
+
+async function useSkill(skill) {
+  if (battleActive) return;
+  
+  battleActive = true;
+  disableButtons();
+  
+  // Player turn
+  let dmg = 0;
+  if (skill === 'strike') {
+    dmg = Math.floor(Math.random() * 41) + 80; // 80-120
+    enemyHP -= dmg;
+    log(`⚔️ You strike for ${dmg} damage!`);
+  } else if (skill === 'blaze') {
+    dmg = Math.floor(Math.random() * 51) + 100; // 100-150
+    enemyHP -= dmg;
+    if (Math.random() < 0.4) {
+      enemyBurning = 3;
+      log(`🔥 You blaze for ${dmg} damage and apply BURN!`);
+    } else {
+      log(`🔥 You blaze for ${dmg} damage!`);
+    }
+  } else if (skill === 'frost') {
+    dmg = Math.floor(Math.random() * 51) + 90; // 90-140
+    enemyHP -= dmg;
+    if (Math.random() < 0.5) {
+      enemyFrozen = true;
+      log(`❄️ You frost for ${dmg} damage and FREEZE enemy!`);
+    } else {
+      log(`❄️ You frost for ${dmg} damage!`);
+    }
+  } else if (skill === 'heal') {
+    const heal = Math.floor(Math.random() * 51) + 150; // 150-200
+    playerHP = Math.min(playerMaxHP, playerHP + heal);
+    log(`💚 You heal for ${heal} HP!`);
+  }
+  
+  updateHP();
+  
+  if (enemyHP <= 0) {
+    victory();
+    return;
+  }
+  
+  await sleep(1000);
+  
+  // Enemy turn
+  const enemySkill = Math.random() < 0.3 ? 'blaze' : 'strike';
+  let enemyDmg = enemySkill === 'blaze' 
+    ? Math.floor(Math.random() * 41) + 90
+    : Math.floor(Math.random() * 31) + 70;
+  
+  if (enemyFrozen) {
+    enemyDmg = Math.floor(enemyDmg * 0.5);
+    log(`❄️ Enemy is frozen! Damage reduced!`);
+    enemyFrozen = false;
+  }
+  
+  playerHP -= enemyDmg;
+  log(`🤖 Enemy attacks for ${enemyDmg} damage!`);
+  
+  if (enemyBurning > 0) {
+    enemyHP -= 20;
+    enemyBurning--;
+    log(`🔥 Enemy burns for 20 damage! (${enemyBurning} turns left)`);
+  }
+  
+  updateHP();
+  
+  if (playerHP <= 0) {
+    defeat();
+    return;
+  }
+  
+  if (enemyHP <= 0) {
+    victory();
+    return;
+  }
+  
+  battleActive = false;
+  enableButtons();
+}
+
+function victory() {
+  wins++;
+  const reward = parseFloat((Math.random() * 4 + 1).toFixed(2));
+  earned += reward;
+  
+  document.getElementById('status').textContent = '🏆 VICTORY! 🏆';
+  document.getElementById('status').style.color = '#00ff88';
+  log(`🏆 VICTORY! Earned $${reward}`);
+  
+  updateStats();
+  
+  // Loot check
+  const roll = Math.random();
+  let loot = null;
+  for (const item of LOOT) {
+    if (roll < item.chance) {
+      loot = item;
+      break;
+    }
+  }
+  
+  if (loot) {
+    setTimeout(() => showLoot(loot), 1000);
+  }
+  
+  setTimeout(reset, 3000);
+}
+
+function defeat() {
+  losses++;
+  document.getElementById('status').textContent = '💀 Defeated 💀';
+  document.getElementById('status').style.color = '#ff3366';
+  log(`💀 You were defeated!`);
+  updateStats();
+  setTimeout(reset, 3000);
+}
+
+function reset() {
+  playerHP = playerMaxHP;
+  enemyHP = enemyMaxHP;
+  enemyFrozen = false;
+  enemyBurning = 0;
+  battleActive = false;
+  
+  document.getElementById('status').textContent = 'Ready to Battle!';
+  document.getElementById('status').style.color = '#00ff88';
+  
+  updateHP();
+  enableButtons();
+}
+
+function showLoot(loot) {
+  document.getElementById('lootIcon').textContent = loot.icon;
+  document.getElementById('lootName').textContent = loot.name;
+  document.getElementById('lootRarity').textContent = loot.rarity;
+  document.getElementById('lootValue').textContent = '$' + loot.value;
+  document.getElementById('lootPopup').classList.add('show');
+  log(`🎁 ${loot.icon} ${loot.name} (${loot.rarity}) dropped!`);
+}
+
+function closeLoot() {
+  document.getElementById('lootPopup').classList.remove('show');
+}
+
+function updateStats() {
+  document.getElementById('wins').textContent = wins;
+  document.getElementById('losses').textContent = losses;
+  document.getElementById('earned').textContent = '$' + earned.toFixed(2);
+  
+  const total = wins + losses;
+  const wr = total > 0 ? Math.round((wins / total) * 100) : 0;
+  document.getElementById('winrate').textContent = wr + '%';
+}
+
+function disableButtons() {
+  ['btnStrike', 'btnBlaze', 'btnFrost', 'btnHeal'].forEach(id => {
+    document.getElementById(id).disabled = true;
+  });
+}
+
+function enableButtons() {
+  ['btnStrike', 'btnBlaze', 'btnFrost', 'btnHeal'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Easter egg: Fast auto-battle
+let autoBattleCount = 0;
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'a') {
+    autoBattleCount++;
+    if (autoBattleCount >= 3 && !battleActive) {
+      log('🤖 AUTO-BATTLE MODE ACTIVATED!');
+      autoBattle();
+    }
+  }
+});
+
+async function autoBattle() {
+  for (let i = 0; i < 5; i++) {
+    if (!battleActive) {
+      useSkill(['strike', 'blaze', 'frost'][Math.floor(Math.random() * 3)]);
+      await sleep(3000);
+    }
+  }
+}
+
+log('⚔️ Battle Arena Ready!');
+log('💡 Press "a" 3 times for auto-battle mode!');
+</script>
+</body>
+</html>

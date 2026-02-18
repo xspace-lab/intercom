@@ -1,26 +1,42 @@
 {
-  "name": "contract-test-latest",
-  "version": "0.0.1",
-  "type": "module",
+  "name": "gamefi-hub-blockchain",
+  "version": "1.0.0",
+  "description": "GameFi Hub - Blockchain integration with smart contracts and Web3",
   "main": "index.js",
-  "pear": {
-    "name": "contract-test-latest",
-    "type": "terminal"
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:trac-testnet": "hardhat run scripts/deploy-trac.js --network trac-testnet",
+    "deploy:trac-mainnet": "hardhat run scripts/deploy-trac.js --network trac-mainnet",
+    "deploy:mumbai": "hardhat run scripts/deploy.js --network mumbai",
+    "deploy:polygon": "hardhat run scripts/deploy.js --network polygon",
+    "verify:mumbai": "hardhat verify --network mumbai",
+    "node": "hardhat node"
+  },
+  "keywords": [
+    "gamefi",
+    "blockchain",
+    "web3",
+    "nft",
+    "defi",
+    "polygon",
+    "ethereum"
+  ],
+  "author": "GameFi Hub Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "chai": "^4.3.10",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.19.4",
+    "hardhat-gas-reporter": "^1.0.9"
   },
   "dependencies": {
-    "b4a": "^1.6.7",
-    "bare-ws": "2.0.3",
-    "compact-encoding": "^2.18.0",
-    "crypto": "npm:bare-node-crypto",
-    "fs": "npm:bare-node-fs",
-    "path": "npm:bare-node-path",
-    "protomux": "^3.10.1",
-    "trac-msb": "git+https://github.com/Trac-Systems/main_settlement_bus.git#5088921",
-    "trac-peer": "git+https://github.com/Trac-Systems/trac-peer.git#d108f52",
-    "trac-wallet": "1.0.1",
-    "util": "npm:bare-node-util"
-  },
-  "overrides": {
-    "trac-wallet": "1.0.1"
+    "@openzeppelin/contracts": "^5.0.1",
+    "dotenv": "^16.3.1"
   }
 }
