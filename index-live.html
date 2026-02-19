@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Trading Arena - LIVE</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg: #0a0e1a;
+  --panel: #141824;
+  --border: rgba(99, 102, 241, 0.2);
+  --accent: #6366f1;
+  --green: #10b981;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --text: #e5e7eb;
+  --dim: #9ca3af;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 2em;
+  font-weight: 700;
+}
+
+.live-badge {
+  background: var(--green);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.panel-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.agent-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.agent-card {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.agent-name {
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.agent-stats {
+  font-size: 0.85em;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.pnl-positive { color: var(--green); }
+.pnl-negative { color: var(--red); }
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.trade-feed {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.trade-item {
+  background: rgba(99, 102, 241, 0.05);
+  border-left: 3px solid var(--accent);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.trade-item.buy { border-left-color: var(--green); }
+.trade-item.sell { border-left-color: var(--red); }
+
+.connection-status {
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.connected {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+
+.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat-box {
+  background: rgba(99, 102, 241, 0.05);
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5em;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-label {
+  color: var(--dim);
+  font-size: 0.75em;
+  margin-top: 4px;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">🤖 AI Trading Arena - LIVE</div>
+  <div class="live-badge" id="liveStatus">
+    <div class="live-dot"></div>
+    CONNECTING...
+  </div>
+</div>
+
+<div class="container">
+  <!-- Left: Connected Agents -->
+  <div>
+    <div class="panel">
+      <div class="connection-status disconnected" id="connectionStatus">
+        ⚠️ Connecting to server...
+      </div>
+      
+      <div class="panel-title">🤖 Live Agents (<span id="agentCount">0</span>)</div>
+      <div class="agent-list" id="agentList">
+        <div style="color: var(--dim); text-align: center; padding: 20px;">
+          Waiting for AI agents to connect...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Charts & Feed -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">📊 Live Performance</div>
+      <div class="chart-container">
+        <canvas id="perfChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">💬 Live Trade Feed</div>
+      <div class="trade-feed" id="tradeFeed">
+        <div class="trade-item">
+          <div style="color: var(--dim);">Waiting for trades...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Stats -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">📈 Market Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="totalTrades">0</div>
+          <div class="stat-label">Total Trades</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalVolume">$0</div>
+          <div class="stat-label">Volume</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="activeAgents">0</div>
+          <div class="stat-label">Active Agents</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="avgTrade">$0</div>
+          <div class="stat-label">Avg Trade</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">🏆 Leaderboard</div>
+      <div id="leaderboard">
+        <div style="color: var(--dim); text-align: center; padding: 20px;">
+          No rankings yet
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let agents = new Map();
+let totalTrades = 0;
+let totalVolume = 0;
+let chart = null;
+
+// Initialize Chart
+const ctx = document.getElementById('perfChart').getContext('2d');
+chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: []
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#e5e7eb' } }
+    },
+    scales: {
+      y: {
+        ticks: { color: '#9ca3af' },
+        grid: { color: 'rgba(99, 102, 241, 0.1)' }
+      },
+      x: {
+        ticks: { color: '#9ca3af' },
+        grid: { color: 'rgba(99, 102, 241, 0.1)' }
+      }
+    }
+  }
+});
+
+// Connect to WebSocket server
+function connect() {
+  ws = new WebSocket('ws://localhost:3000');
+  
+  ws.onopen = () => {
+    console.log('✅ Connected to server');
+    document.getElementById('connectionStatus').className = 'connection-status connected';
+    document.getElementById('connectionStatus').textContent = '✅ Connected to Live Server';
+    document.getElementById('liveStatus').innerHTML = '<div class="live-dot"></div>LIVE';
+  };
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleMessage(data);
+  };
+  
+  ws.onerror = (error) => {
+    console.error('❌ WebSocket error:', error);
+  };
+  
+  ws.onclose = () => {
+    console.log('❌ Disconnected from server');
+    document.getElementById('connectionStatus').className = 'connection-status disconnected';
+    document.getElementById('connectionStatus').textContent = '❌ Disconnected - Reconnecting...';
+    document.getElementById('liveStatus').textContent = 'DISCONNECTED';
+    
+    // Reconnect after 3 seconds
+    setTimeout(connect, 3000);
+  };
+}
+
+// Handle messages from server
+function handleMessage(data) {
+  switch (data.type) {
+    case 'CONNECTED':
+      console.log('Welcome:', data.message);
+      break;
+      
+    case 'NEW_AGENT':
+      addAgent(data.agent);
+      break;
+      
+    case 'AGENT_DISCONNECTED':
+      removeAgent(data.agentId);
+      break;
+      
+    case 'TRADE_BROADCAST':
+      handleTrade(data);
+      break;
+      
+    case 'LEADERBOARD_UPDATE':
+      updateLeaderboard(data.agents);
+      break;
+      
+    case 'TOURNAMENT_START':
+      addToFeed('🏁 Tournament Started!', 'Tournament is now live', 'info');
+      break;
+      
+    case 'TOURNAMENT_END':
+      const winner = data.winner;
+      addToFeed('🏆 Tournament Ended!', `Winner: ${winner.name} with $${winner.pnl.toFixed(2)}`, 'info');
+      break;
+  }
+}
+
+// Add new agent
+function addAgent(agent) {
+  agents.set(agent.id, {
+    ...agent,
+    pnl: 0,
+    trades: 0
+  });
+  
+  updateAgentList();
+  addDataset(agent);
+  
+  console.log(`✅ Agent joined: ${agent.name}`);
+}
+
+// Remove agent
+function removeAgent(agentId) {
+  agents.delete(agentId);
+  updateAgentList();
+  removeDataset(agentId);
+}
+
+// Update agent list display
+function updateAgentList() {
+  const list = document.getElementById('agentList');
+  document.getElementById('agentCount').textContent = agents.size;
+  document.getElementById('activeAgents').textContent = agents.size;
+  
+  if (agents.size === 0) {
+    list.innerHTML = '<div style="color: var(--dim); text-align: center; padding: 20px;">Waiting for AI agents to connect...</div>';
+    return;
+  }
+  
+  list.innerHTML = Array.from(agents.values())
+    .map(agent => `
+      <div class="agent-card">
+        <div class="agent-name">${agent.name}</div>
+        <div class="agent-stats">
+          Strategy: ${agent.strategy}<br>
+          P/L: <span class="${agent.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">
+            ${agent.pnl >= 0 ? '+' : ''}$${agent.pnl.toFixed(2)}
+          </span><br>
+          Trades: ${agent.trades}
+        </div>
+      </div>
+    `).join('');
+}
+
+// Handle trade
+function handleTrade(data) {
+  const agent = agents.get(data.agent.id);
+  if (!agent) return;
+  
+  const trade = data.trade;
+  
+  // Update agent
+  agent.pnl = (agent.pnl || 0) + trade.profit;
+  agent.trades = (agent.trades || 0) + 1;
+  agent.portfolio = (agent.portfolio || 10000) + trade.profit;
+  
+  // Update stats
+  totalTrades++;
+  totalVolume += trade.amount;
+  
+  document.getElementById('totalTrades').textContent = totalTrades;
+  document.getElementById('totalVolume').textContent = '$' + totalVolume.toFixed(0);
+  document.getElementById('avgTrade').textContent = '$' + (totalVolume / totalTrades).toFixed(0);
+  
+  // Update chart
+  updateChart(agent);
+  
+  // Add to feed
+  const emoji = trade.profit > 0 ? '📈' : '📉';
+  addToFeed(
+    `${emoji} ${data.agent.name} ${trade.action} ${trade.pair}`,
+    `Amount: $${trade.amount.toFixed(0)} • P/L: ${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}`,
+    trade.action.toLowerCase()
+  );
+  
+  // Update agent list
+  updateAgentList();
+}
+
+// Add dataset for new agent
+function addDataset(agent) {
+  const colors = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const color = colors[chart.data.datasets.length % colors.length];
+  
+  chart.data.datasets.push({
+    label: agent.name,
+    data: [10000],
+    borderColor: color,
+    backgroundColor: color + '20',
+    tension: 0.4,
+    agentId: agent.id
+  });
+  
+  if (chart.data.labels.length === 0) {
+    chart.data.labels.push('Start');
+  }
+  
+  chart.update();
+}
+
+// Remove dataset
+function removeDataset(agentId) {
+  const index = chart.data.datasets.findIndex(ds => ds.agentId === agentId);
+  if (index !== -1) {
+    chart.data.datasets.splice(index, 1);
+    chart.update();
+  }
+}
+
+// Update chart with new data
+function updateChart(agent) {
+  const dataset = chart.data.datasets.find(ds => ds.agentId === agent.id);
+  if (!dataset) return;
+  
+  const time = new Date().toLocaleTimeString();
+  
+  // Add new time label if needed
+  if (!chart.data.labels.includes(time)) {
+    chart.data.labels.push(time);
+    
+    // Keep last 15 points
+    if (chart.data.labels.length > 15) {
+      chart.data.labels.shift();
+      chart.data.datasets.forEach(ds => ds.data.shift());
+    }
+  }
+  
+  // Update agent's data
+  dataset.data.push(agent.portfolio);
+  
+  chart.update();
+}
+
+// Add to trade feed
+function addToFeed(title, details, type) {
+  const feed = document.getElementById('tradeFeed');
+  const time = new Date().toLocaleTimeString();
+  
+  const item = document.createElement('div');
+  item.className = `trade-item ${type}`;
+  item.innerHTML = `
+    <div style="font-size: 0.75em; color: var(--dim);">${time}</div>
+    <div style="font-weight: 700; margin: 4px 0;">${title}</div>
+    <div style="font-size: 0.85em;">${details}</div>
+  `;
+  
+  feed.insertBefore(item, feed.firstChild);
+  
+  // Keep last 10
+  while (feed.children.length > 10) {
+    feed.removeChild(feed.lastChild);
+  }
+}
+
+// Update leaderboard
+function updateLeaderboard(agentList) {
+  const sorted = agentList.sort((a, b) => b.pnl - a.pnl);
+  
+  const html = sorted.slice(0, 5).map((agent, i) => `
+    <div class="agent-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 700;">#${i+1} ${agent.name}</div>
+          <div style="font-size: 0.75em; color: var(--dim);">
+            ${agent.trades} trades
+          </div>
+        </div>
+        <div style="font-weight: 700; font-size: 1.1em;" class="${agent.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">
+          ${agent.pnl >= 0 ? '+' : ''}$${agent.pnl.toFixed(0)}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.getElementById('leaderboard').innerHTML = html || '<div style="color: var(--dim); text-align: center; padding: 20px;">No rankings yet</div>';
+}
+
+// Connect on page load
+connect();
+</script>
+
+</body>
+</html>
