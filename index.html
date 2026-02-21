@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Collaboratory - Choose Your Experience</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e8f0fe 100%);
+  color: #1e293b;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.logo {
+  font-size: 4em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.tagline {
+  font-size: 1.5em;
+  color: #475569;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 1.1em;
+  color: #64748b;
+  margin-top: 10px;
+  font-weight: 400;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 60px;
+}
+
+.option-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.option-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-8px);
+  border-color: #3b82f6;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.option-card:hover::before {
+  opacity: 1;
+}
+
+.option-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.option-title {
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #1e293b;
+}
+
+.option-desc {
+  font-size: 1.1em;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.option-features {
+  list-style: none;
+  text-align: left;
+  margin-bottom: 25px;
+}
+
+.option-features li {
+  padding: 8px 0;
+  color: #475569;
+  font-size: 0.95em;
+}
+
+.option-features li::before {
+  content: '✓';
+  color: #10b981;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+  color: #3b82f6;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+}
+
+.badge.recommended {
+  background: linear-gradient(135deg, #fae8ff, #fce7f3);
+  color: #8b5cf6;
+}
+
+.btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  padding: 16px 40px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
+}
+
+.btn.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #475569);
+  box-shadow: 0 4px 6px -1px rgba(100, 116, 139, 0.3), 0 2px 4px -1px rgba(100, 116, 139, 0.2);
+}
+
+.comparison {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 30px;
+  margin-top: 40px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.comparison-title {
+  font-size: 1.5em;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #1e293b;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.comparison-table th {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-transform: uppercase;
+}
+
+.comparison-table td {
+  color: #475569;
+}
+
+.check { color: #10b981; font-size: 1.2em; }
+.cross { color: #ef4444; font-size: 1.2em; }
+
+.footer {
+  text-align: center;
+  margin-top: 60px;
+  color: #64748b;
+  font-size: 0.95em;
+}
+
+.footer a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .options {
+    grid-template-columns: 1fr;
+  }
+  
+  .logo {
+    font-size: 2.5em;
+  }
+  
+  .tagline {
+    font-size: 1.2em;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">🤖 AI Collaboratory</div>
+    <div class="tagline">Where AI Agents Work Together</div>
+    <div class="subtitle">Experience the future of AI collaboration</div>
+  </div>
+
+  <div class="options">
+    <!-- Demo Version -->
+    <div class="option-card" onclick="window.location.href='index-demo.html'">
+      <span class="badge">Quick Start</span>
+      <span class="option-icon">⚡</span>
+      <h2 class="option-title">Try the Demo</h2>
+      <p class="option-desc">
+        See AI agents collaborate instantly—no setup needed!
+      </p>
+      
+      <ul class="option-features">
+        <li>Works in 10 seconds</li>
+        <li>No downloads or API keys</li>
+        <li>See simulated collaboration</li>
+        <li>Perfect for a quick preview</li>
+        <li>All features available</li>
+      </ul>
+      
+      <a href="index-demo.html" class="btn btn-secondary">Try Demo Now</a>
+    </div>
+
+    <!-- Live Version -->
+    <div class="option-card" onclick="window.location.href='index-live.html'">
+      <span class="badge recommended">Most Impressive</span>
+      <span class="option-icon">🚀</span>
+      <h2 class="option-title">Go Live</h2>
+      <p class="option-desc">
+        Connect real AI agents that actually collaborate together
+      </p>
+      
+      <ul class="option-features">
+        <li>Real Claude & GPT-4 agents</li>
+        <li>Genuine multi-agent teamwork</li>
+        <li>True Intercom protocol</li>
+        <li>Production-ready system</li>
+        <li>Most impressive for demos!</li>
+      </ul>
+      
+      <a href="index-live.html" class="btn">Launch Live Mode</a>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="comparison">
+    <h3 class="comparison-title">Feature Comparison</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Demo Mode</th>
+          <th>Live Mode</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Setup Time</td>
+          <td>0 seconds</td>
+          <td>5 minutes</td>
+        </tr>
+        <tr>
+          <td>Real AI Agents</td>
+          <td><span class="cross">✗</span> Simulated</td>
+          <td><span class="check">✓</span> Claude & GPT-4</td>
+        </tr>
+        <tr>
+          <td>WebSocket Server</td>
+          <td><span class="cross">✗</span> Not needed</td>
+          <td><span class="check">✓</span> Full server</td>
+        </tr>
+        <tr>
+          <td>Intercom Protocol</td>
+          <td><span class="cross">✗</span> Conceptual</td>
+          <td><span class="check">✓</span> True implementation</td>
+        </tr>
+        <tr>
+          <td>API Keys</td>
+          <td><span class="check">✓</span> None needed</td>
+          <td><span class="cross">✗</span> Required</td>
+        </tr>
+        <tr>
+          <td>Best For</td>
+          <td>Quick demos, screenshots</td>
+          <td>Competition submission!</td>
+        </tr>
+        <tr>
+          <td>Cost</td>
+          <td><span class="check">✓</span> $0.00</td>
+          <td>~$0.02 per task</td>
+        </tr>
+        <tr>
+          <td>Impressiveness</td>
+          <td>⭐⭐⭐⭐</td>
+          <td>⭐⭐⭐⭐⭐</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p>
+      <strong>New here?</strong> Try the <a href="index-demo.html">Demo</a> for instant results,
+      or dive into <a href="index-live.html">Live Mode</a> to see real AI agents collaborate!
+    </p>
+    <p style="margin-top: 15px;">
+      Built for the <strong>Intercom Competition</strong> • 
+      Powered by <a href="https://github.com/Trac-Systems/intercom" target="_blank">Intercom</a> & 
+      <a href="https://github.com/TracSystems/intercom-swap" target="_blank">IntercomSwap</a>
+    </p>
+  </div>
+</div>
+
+<script>
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'd' || e.key === 'D') {
+    window.location.href = 'index-demo.html';
+  } else if (e.key === 'l' || e.key === 'L') {
+    window.location.href = 'index-live.html';
+  }
+});
+</script>
+
+</body>
+</html>

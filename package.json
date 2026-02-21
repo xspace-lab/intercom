@@ -1,26 +1,27 @@
 {
-  "name": "contract-test-latest",
-  "version": "0.0.1",
-  "type": "module",
-  "main": "index.js",
-  "pear": {
-    "name": "contract-test-latest",
-    "type": "terminal"
+  "name": "ai-collaboratory",
+  "version": "1.0.0",
+  "description": "Multi-agent AI collaboration platform powered by Intercom and IntercomSwap",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
+  "keywords": [
+    "ai",
+    "collaboration",
+    "multi-agent",
+    "intercom",
+    "intercomswap",
+    "trac",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
-    "b4a": "^1.6.7",
-    "bare-ws": "2.0.3",
-    "compact-encoding": "^2.18.0",
-    "crypto": "npm:bare-node-crypto",
-    "fs": "npm:bare-node-fs",
-    "path": "npm:bare-node-path",
-    "protomux": "^3.10.1",
-    "trac-msb": "git+https://github.com/Trac-Systems/main_settlement_bus.git#5088921",
-    "trac-peer": "git+https://github.com/Trac-Systems/trac-peer.git#d108f52",
-    "trac-wallet": "1.0.1",
-    "util": "npm:bare-node-util"
+    "ws": "^8.16.0"
   },
-  "overrides": {
-    "trac-wallet": "1.0.1"
+  "devDependencies": {
+    "nodemon": "^3.0.3"
   }
 }

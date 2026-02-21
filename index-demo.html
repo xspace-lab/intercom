@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Collaboratory - Watch AI Agents Collaborate</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --accent: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --text: #1e293b;
+  --text-dim: #64748b;
+  --code-bg: #f1f5f9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.header {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  font-size: 2.5em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.tagline {
+  font-size: 1.2em;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 350px 1fr 400px;
+  gap: 25px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 25px;
+  height: fit-content;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.panel-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  background: var(--accent);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.task-form label {
+  color: var(--text-dim);
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.task-form input,
+.task-form textarea,
+.task-form select {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95em;
+}
+
+.task-form textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: 'Fira Code', monospace;
+}
+
+.btn {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1em;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.agent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-card {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.2s;
+}
+
+.agent-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.agent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.agent-name {
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
+.agent-status {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.status-idle { background: rgba(148, 163, 184, 0.15); color: var(--text-dim); }
+.status-thinking { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.status-working { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+.agent-specialty {
+  color: var(--text-dim);
+  font-size: 0.85em;
+}
+
+.chat-container {
+  background: var(--code-bg);
+  border-radius: 8px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.message-content {
+  flex: 1;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.message-author {
+  font-weight: 700;
+  font-size: 0.95em;
+}
+
+.message-time {
+  color: var(--text-dim);
+  font-size: 0.8em;
+}
+
+.message-text {
+  background: var(--surface);
+  padding: 12px 15px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.message-text pre {
+  background: var(--code-bg);
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin-top: 8px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85em;
+}
+
+.output-panel {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 200px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.output-title {
+  color: var(--success);
+  font-weight: 600;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+
+.task-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.task-title {
+  font-weight: 700;
+}
+
+.task-type {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+  background: rgba(88, 166, 255, 0.2);
+  color: var(--accent);
+}
+
+.task-desc {
+  color: var(--text-dim);
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85em;
+  color: var(--success);
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--success);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.stat-box {
+  background: var(--code-bg);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  color: var(--text-dim);
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px 20px;
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--code-bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🤖 AI Collaboratory</div>
+  <div class="tagline">Watch AI agents collaborate in real-time</div>
+</div>
+
+<div class="container">
+  <!-- Left: Task Input -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">
+        📝 Submit Task
+        <span class="badge">LIVE</span>
+      </div>
+      
+      <form class="task-form" onsubmit="submitTask(event)">
+        <div>
+          <label>Task Type</label>
+          <select id="taskType">
+            <option value="code">💻 Write Code</option>
+            <option value="debug">🐛 Debug Code</option>
+            <option value="research">🔍 Research Topic</option>
+            <option value="write">✍️ Write Content</option>
+            <option value="analyze">📊 Analyze Data</option>
+            <option value="design">🎨 Design System</option>
+          </select>
+        </div>
+        
+        <div>
+          <label>Task Description</label>
+          <textarea 
+            id="taskDesc" 
+            placeholder="Describe what you need the AI agents to build..."
+            required
+          ></textarea>
+        </div>
+        
+        <button type="submit" class="btn" id="submitBtn">
+          🚀 Launch Collaboration
+        </button>
+      </form>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">🤖 Active Agents</div>
+      <div class="agent-list" id="agentList">
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-name">Claude Architect</div>
+            <div class="agent-status status-idle">IDLE</div>
+          </div>
+          <div class="agent-specialty">System design & architecture</div>
+        </div>
+        
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-name">GPT-4 Coder</div>
+            <div class="agent-status status-idle">IDLE</div>
+          </div>
+          <div class="agent-specialty">Implementation & debugging</div>
+        </div>
+        
+        <div class="agent-card">
+          <div class="agent-header">
+            <div class="agent-name">Gemini Researcher</div>
+            <div class="agent-status status-idle">IDLE</div>
+          </div>
+          <div class="agent-specialty">Research & analysis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Collaboration Chat -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">💬 Agent Collaboration</div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="empty-state">
+            Submit a task to watch AI agents collaborate...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">📦 Deliverables</div>
+      <div class="output-panel" id="outputPanel">
+        <div class="empty-state">
+          Results will appear here when agents complete tasks...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Task Queue & Stats -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">📋 Task Queue</div>
+      <div class="task-queue" id="taskQueue">
+        <div class="empty-state">
+          No active tasks
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">📊 Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="tasksCompleted">0</div>
+          <div class="stat-label">Tasks Completed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="activeAgents">3</div>
+          <div class="stat-label">Active Agents</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalMessages">0</div>
+          <div class="stat-label">Messages</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="avgTime">0s</div>
+          <div class="stat-label">Avg Time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tasksCompleted = 0;
+let totalMessages = 0;
+let currentTask = null;
+
+const TASK_TEMPLATES = {
+  code: {
+    agents: ['Claude Architect', 'GPT-4 Coder'],
+    workflow: [
+      { agent: 'Claude Architect', delay: 1000, action: 'plan' },
+      { agent: 'GPT-4 Coder', delay: 2000, action: 'implement' },
+      { agent: 'Claude Architect', delay: 1500, action: 'review' }
+    ]
+  },
+  debug: {
+    agents: ['GPT-4 Coder', 'Claude Architect'],
+    workflow: [
+      { agent: 'GPT-4 Coder', delay: 1000, action: 'analyze' },
+      { agent: 'Claude Architect', delay: 1500, action: 'suggest' },
+      { agent: 'GPT-4 Coder', delay: 2000, action: 'fix' }
+    ]
+  },
+  research: {
+    agents: ['Gemini Researcher', 'Claude Architect'],
+    workflow: [
+      { agent: 'Gemini Researcher', delay: 2000, action: 'research' },
+      { agent: 'Claude Architect', delay: 1500, action: 'synthesize' }
+    ]
+  },
+  write: {
+    agents: ['Claude Architect', 'GPT-4 Coder'],
+    workflow: [
+      { agent: 'Claude Architect', delay: 1500, action: 'outline' },
+      { agent: 'GPT-4 Coder', delay: 2000, action: 'write' },
+      { agent: 'Claude Architect', delay: 1000, action: 'edit' }
+    ]
+  },
+  analyze: {
+    agents: ['Gemini Researcher', 'Claude Architect'],
+    workflow: [
+      { agent: 'Gemini Researcher', delay: 2000, action: 'collect' },
+      { agent: 'Claude Architect', delay: 1500, action: 'analyze' }
+    ]
+  },
+  design: {
+    agents: ['Claude Architect', 'GPT-4 Coder', 'Gemini Researcher'],
+    workflow: [
+      { agent: 'Gemini Researcher', delay: 1500, action: 'requirements' },
+      { agent: 'Claude Architect', delay: 2000, action: 'design' },
+      { agent: 'GPT-4 Coder', delay: 1500, action: 'validate' }
+    ]
+  }
+};
+
+function submitTask(event) {
+  event.preventDefault();
+  
+  const type = document.getElementById('taskType').value;
+  const desc = document.getElementById('taskDesc').value;
+  
+  if (!desc.trim()) return;
+  
+  currentTask = {
+    id: Date.now(),
+    type: type,
+    description: desc,
+    startTime: Date.now()
+  };
+  
+  // Add to queue
+  addTaskToQueue(currentTask);
+  
+  // Start collaboration
+  startCollaboration(currentTask);
+  
+  // Clear form
+  document.getElementById('taskDesc').value = '';
+  document.getElementById('submitBtn').disabled = true;
+}
+
+function addTaskToQueue(task) {
+  const queue = document.getElementById('taskQueue');
+  
+  const taskTypes = {
+    code: '💻 Code',
+    debug: '🐛 Debug',
+    research: '🔍 Research',
+    write: '✍️ Write',
+    analyze: '📊 Analyze',
+    design: '🎨 Design'
+  };
+  
+  queue.innerHTML = `
+    <div class="task-item">
+      <div class="task-header">
+        <div class="task-title">${task.description.substring(0, 40)}...</div>
+        <div class="task-type">${taskTypes[task.type]}</div>
+      </div>
+      <div class="task-desc">${task.description}</div>
+      <div class="task-progress">
+        <div class="spinner"></div>
+        Agents collaborating...
+      </div>
+    </div>
+  `;
+}
+
+async function startCollaboration(task) {
+  const template = TASK_TEMPLATES[task.type];
+  const chat = document.getElementById('chatMessages');
+  chat.innerHTML = '';
+  
+  // Welcome message
+  addMessage('System', '🤖', `Task assigned: ${task.description}`, true);
+  await sleep(500);
+  addMessage('System', '🤖', `Assembling team: ${template.agents.join(', ')}`, true);
+  await sleep(800);
+  
+  // Execute workflow
+  for (const step of template.workflow) {
+    setAgentStatus(step.agent, 'thinking');
+    await sleep(step.delay);
+    
+    const message = generateMessage(step.agent, step.action, task);
+    addMessage(step.agent, getAgentEmoji(step.agent), message);
+    
+    setAgentStatus(step.agent, 'working');
+    await sleep(500);
+    setAgentStatus(step.agent, 'idle');
+  }
+  
+  // Complete task
+  await sleep(1000);
+  completeTask(task);
+}
+
+function generateMessage(agent, action, task) {
+  const messages = {
+    'Claude Architect': {
+      plan: `I'll design the architecture. Here's my approach:\n\n1. Analyze requirements\n2. Design modular structure\n3. Define interfaces\n4. Plan implementation`,
+      review: `Code review complete. Looking good! I suggest:\n\n- Add error handling\n- Improve variable naming\n- Add unit tests`,
+      suggest: `I found the issue. The problem is in the async handling. We should:\n\n- Add proper await\n- Handle edge cases\n- Add timeout`,
+      synthesize: `Based on research, here are the key findings:\n\n- Approach A is optimal\n- Consider trade-offs\n- Implementation path`,
+      outline: `Content outline:\n\n## Introduction\n## Main Points\n## Analysis\n## Conclusion`,
+      edit: `Edited for clarity and flow. Final version looks great!`,
+      analyze: `Analysis complete. Key insights:\n\n- Pattern identified\n- Root cause found\n- Solution proposed`,
+      design: `System design:\n\n**Architecture**: Microservices\n**Database**: PostgreSQL\n**API**: REST + GraphQL`
+    },
+    'GPT-4 Coder': {
+      implement: `Implementation complete! Here's the code:\n\n\`\`\`javascript\nfunction solution() {\n  // Core logic\n  return result;\n}\n\`\`\``,
+      analyze: `Analyzing the code... I see the issue:\n\nLine 42: Missing null check\nLine 67: Race condition\nLine 89: Memory leak`,
+      fix: `Bug fixed! Changes:\n\n- Added null check\n- Synchronized access\n- Released resources`,
+      write: `Content written:\n\n"${task.description.substring(0, 60)}..."\n\nDraft complete, ready for review.`,
+      validate: `Design validated. Technical feasibility: ✅\n\nRecommendations:\n- Use TypeScript\n- Add logging\n- Implement caching`
+    },
+    'Gemini Researcher': {
+      research: `Research complete! Found ${Math.floor(Math.random() * 20) + 10} relevant sources.\n\nKey findings:\n- Industry standard approach\n- Best practices identified\n- Common pitfalls noted`,
+      collect: `Data collected and processed:\n\n- ${Math.floor(Math.random() * 100) + 50} data points\n- Patterns identified\n- Anomalies flagged`,
+      requirements: `Requirements gathered:\n\n**Must Have**:\n- Feature A\n- Feature B\n\n**Nice to Have**:\n- Feature C`
+    }
+  };
+  
+  return messages[agent][action] || 'Working on it...';
+}
+
+function addMessage(author, emoji, text, isSystem = false) {
+  const chat = document.getElementById('chatMessages');
+  const time = new Date().toLocaleTimeString();
+  
+  const msg = document.createElement('div');
+  msg.className = 'message';
+  msg.innerHTML = `
+    <div class="message-avatar">${emoji}</div>
+    <div class="message-content">
+      <div class="message-header">
+        <div class="message-author">${author}</div>
+        <div class="message-time">${time}</div>
+      </div>
+      <div class="message-text">${text.replace(/\n/g, '<br>')}</div>
+    </div>
+  `;
+  
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  
+  totalMessages++;
+  document.getElementById('totalMessages').textContent = totalMessages;
+}
+
+function getAgentEmoji(agent) {
+  const emojis = {
+    'Claude Architect': '🏗️',
+    'GPT-4 Coder': '💻',
+    'Gemini Researcher': '🔍'
+  };
+  return emojis[agent] || '🤖';
+}
+
+function setAgentStatus(agentName, status) {
+  const agents = document.querySelectorAll('.agent-card');
+  agents.forEach(card => {
+    const name = card.querySelector('.agent-name').textContent;
+    if (name === agentName) {
+      const statusEl = card.querySelector('.agent-status');
+      statusEl.className = `agent-status status-${status}`;
+      statusEl.textContent = status.toUpperCase();
+      
+      if (status !== 'idle') {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    }
+  });
+}
+
+function completeTask(task) {
+  tasksCompleted++;
+  const duration = Math.floor((Date.now() - task.startTime) / 1000);
+  
+  // Update stats
+  document.getElementById('tasksCompleted').textContent = tasksCompleted;
+  document.getElementById('avgTime').textContent = duration + 's';
+  
+  // Show completion message
+  addMessage('System', '✅', `Task completed in ${duration} seconds! Payment processed via IntercomSwap.`, true);
+  
+  // Generate output
+  showOutput(task);
+  
+  // Clear queue
+  document.getElementById('taskQueue').innerHTML = '<div class="empty-state">No active tasks</div>';
+  
+  // Re-enable submit
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function showOutput(task) {
+  const output = document.getElementById('outputPanel');
+  
+  const outputs = {
+    code: `<div class="output-title">✅ Code Generated</div>
+<pre>// ${task.description}
+
+function implementation() {
+  const result = processData();
+  return optimize(result);
+}
+
+export default implementation;</pre>`,
+    
+    debug: `<div class="output-title">✅ Bug Fixed</div>
+<pre>Fixed Issues:
+- Null pointer exception (line 42)
+- Race condition (line 67)
+- Memory leak (line 89)
+
+All tests passing ✅</pre>`,
+    
+    research: `<div class="output-title">✅ Research Report</div>
+<pre>Research Summary: ${task.description}
+
+Key Findings:
+- Best practice: Approach A
+- Industry standard: Solution B
+- Recommended: Hybrid approach
+
+Sources: 15 papers, 8 articles</pre>`,
+    
+    write: `<div class="output-title">✅ Content Created</div>
+<pre>${task.description}
+
+[Draft content created]
+Word count: 850
+Reading time: 4 min
+SEO score: 92/100</pre>`,
+    
+    analyze: `<div class="output-title">✅ Analysis Complete</div>
+<pre>Data Analysis Results:
+
+Patterns Found: 3
+Anomalies: 2
+Confidence: 94%
+Recommendation: Proceed with Option A</pre>`,
+    
+    design: `<div class="output-title">✅ System Design</div>
+<pre>Architecture: Microservices
+Database: PostgreSQL
+API: GraphQL
+Cache: Redis
+Queue: RabbitMQ
+
+Estimated capacity: 10K req/s</pre>`
+  };
+  
+  output.innerHTML = outputs[task.type];
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+</script>
+
+</body>
+</html>

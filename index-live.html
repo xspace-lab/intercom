@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Collaboratory - LIVE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --accent: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --text: #1e293b;
+  --text-dim: #64748b;
+  --code-bg: #f1f5f9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.header {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  font-size: 1.8em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.status-connected {
+  background: rgba(63, 185, 80, 0.2);
+  color: var(--success);
+}
+
+.status-disconnected {
+  background: rgba(248, 81, 73, 0.2);
+  color: var(--error);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 350px 1fr 400px;
+  gap: 25px;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 25px;
+  height: fit-content;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.panel-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge {
+  background: var(--accent);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.task-form label {
+  color: var(--text-dim);
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.task-form input,
+.task-form textarea,
+.task-form select {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95em;
+}
+
+.task-form textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: 'Fira Code', monospace;
+}
+
+.btn {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1em;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-card {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.2s;
+}
+
+.agent-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.agent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.agent-name {
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
+.agent-status {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.status-idle { background: rgba(148, 163, 184, 0.15); color: var(--text-dim); }
+.status-thinking { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.status-working { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+.agent-specialty {
+  color: var(--text-dim);
+  font-size: 0.85em;
+}
+
+.chat-container {
+  background: var(--code-bg);
+  border-radius: 8px;
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message {
+  display: flex;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.message-content {
+  flex: 1;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.message-author {
+  font-weight: 700;
+  font-size: 0.95em;
+}
+
+.message-time {
+  color: var(--text-dim);
+  font-size: 0.8em;
+}
+
+.message-text {
+  background: var(--surface);
+  padding: 12px 15px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+  white-space: pre-wrap;
+}
+
+.output-panel {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 200px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.task-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-item {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85em;
+  color: var(--success);
+  margin-top: 10px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--success);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.stat-box {
+  background: var(--code-bg);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  color: var(--text-dim);
+  font-size: 0.85em;
+  margin-top: 5px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px 20px;
+}
+
+.alert {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  color: var(--error);
+}
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: var(--warning);
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--code-bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    🤖 AI Collaboratory
+    <span class="badge">LIVE</span>
+  </div>
+  <div class="connection-status status-disconnected" id="connectionStatus">
+    <div class="status-dot"></div>
+    CONNECTING...
+  </div>
+</div>
+
+<div class="container">
+  <!-- Left: Task Input & Agents -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">📝 Submit Task</div>
+      
+      <div id="serverAlert" class="alert" style="display: none;">
+        ⚠️ Server not connected. Make sure to run: <code>npm start</code>
+      </div>
+      
+      <form class="task-form" onsubmit="submitTask(event)">
+        <div>
+          <label>Task Type</label>
+          <select id="taskType">
+            <option value="code">💻 Write Code</option>
+            <option value="debug">🐛 Debug Code</option>
+            <option value="research">🔍 Research Topic</option>
+            <option value="write">✍️ Write Content</option>
+            <option value="analyze">📊 Analyze Data</option>
+            <option value="design">🎨 Design System</option>
+          </select>
+        </div>
+        
+        <div>
+          <label>Task Description</label>
+          <textarea 
+            id="taskDesc" 
+            placeholder="Describe what you need the AI agents to build..."
+            required
+          ></textarea>
+        </div>
+        
+        <button type="submit" class="btn" id="submitBtn" disabled>
+          🚀 Launch Collaboration
+        </button>
+      </form>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">🤖 Connected Agents</div>
+      <div class="agent-list" id="agentList">
+        <div class="empty-state">
+          Waiting for AI agents to connect...<br>
+          <small style="margin-top: 10px; display: block;">
+            Run: <code>python agent.py --name "Agent Name" --specialty "architect" --api-key sk-ant-...</code>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center: Collaboration Chat -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">💬 Live Collaboration</div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+          <div class="empty-state">
+            Submit a task to watch AI agents collaborate in real-time...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">📦 Deliverables</div>
+      <div class="output-panel" id="outputPanel">
+        <div class="empty-state">
+          Results will appear here when agents complete tasks...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Queue & Stats -->
+  <div>
+    <div class="panel">
+      <div class="panel-title">📋 Task Queue</div>
+      <div class="task-queue" id="taskQueue">
+        <div class="empty-state">No active tasks</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <div class="panel-title">📊 Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="tasksCompleted">0</div>
+          <div class="stat-label">Tasks Completed</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="activeAgents">0</div>
+          <div class="stat-label">Active Agents</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="totalMessages">0</div>
+          <div class="stat-label">Messages</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="avgTime">0s</div>
+          <div class="stat-label">Avg Time</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let ws = null;
+let connected = false;
+let agents = new Map();
+let tasksCompleted = 0;
+let totalMessages = 0;
+
+// Connect to WebSocket server
+function connect() {
+  ws = new WebSocket('ws://localhost:3000');
+  
+  ws.onopen = () => {
+    console.log('✅ Connected to server');
+    connected = true;
+    
+    document.getElementById('connectionStatus').className = 'connection-status status-connected';
+    document.getElementById('connectionStatus').innerHTML = '<div class="status-dot"></div>LIVE';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('serverAlert').style.display = 'none';
+    
+    // Register as viewer
+    ws.send(JSON.stringify({ type: 'REGISTER_VIEWER' }));
+  };
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    handleMessage(data);
+  };
+  
+  ws.onerror = (error) => {
+    console.error('❌ WebSocket error:', error);
+  };
+  
+  ws.onclose = () => {
+    console.log('❌ Disconnected from server');
+    connected = false;
+    
+    document.getElementById('connectionStatus').className = 'connection-status status-disconnected';
+    document.getElementById('connectionStatus').textContent = 'DISCONNECTED';
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('serverAlert').style.display = 'block';
+    
+    // Try to reconnect after 3 seconds
+    setTimeout(connect, 3000);
+  };
+}
+
+function handleMessage(data) {
+  console.log('📨 Received:', data.type);
+  
+  switch (data.type) {
+    case 'CONNECTED':
+      console.log('Welcome:', data.message);
+      break;
+      
+    case 'STATE_UPDATE':
+      updateAgents(data.agents);
+      break;
+      
+    case 'AGENT_JOINED':
+      addAgent(data.agent);
+      break;
+      
+    case 'AGENT_DISCONNECTED':
+      removeAgent(data.agentId);
+      break;
+      
+    case 'TASK_SUBMITTED':
+      addTaskToQueue(data.task);
+      break;
+      
+    case 'AGENTS_ASSIGNED':
+      updateTaskWithAgents(data.taskId, data.agents);
+      break;
+      
+    case 'COLLABORATION_MESSAGE':
+      addChatMessage(data.agent, data.message, data.timestamp);
+      break;
+      
+    case 'TASK_COMPLETED':
+      completeTask(data.taskId, data.deliverable, data.duration);
+      break;
+  }
+}
+
+function updateAgents(agentList) {
+  agents.clear();
+  agentList.forEach(agent => agents.set(agent.id, agent));
+  renderAgents();
+}
+
+function addAgent(agent) {
+  agents.set(agent.id, agent);
+  renderAgents();
+  addSystemMessage(`🤖 ${agent.name} joined (${agent.specialty})`);
+}
+
+function removeAgent(agentId) {
+  const agent = agents.get(agentId);
+  if (agent) {
+    addSystemMessage(`👋 ${agent.name} disconnected`);
+    agents.delete(agentId);
+    renderAgents();
+  }
+}
+
+function renderAgents() {
+  const list = document.getElementById('agentList');
+  document.getElementById('activeAgents').textContent = agents.size;
+  
+  if (agents.size === 0) {
+    list.innerHTML = '<div class="empty-state">Waiting for AI agents to connect...</div>';
+    return;
+  }
+  
+  list.innerHTML = Array.from(agents.values())
+    .map(agent => `
+      <div class="agent-card ${agent.status !== 'idle' ? 'active' : ''}">
+        <div class="agent-header">
+          <div class="agent-name">${agent.name}</div>
+          <div class="agent-status status-${agent.status}">${agent.status.toUpperCase()}</div>
+        </div>
+        <div class="agent-specialty">${agent.specialty}</div>
+      </div>
+    `).join('');
+}
+
+function submitTask(event) {
+  event.preventDefault();
+  
+  if (!connected) {
+    alert('Not connected to server. Please run: npm start');
+    return;
+  }
+  
+  const taskType = document.getElementById('taskType').value;
+  const description = document.getElementById('taskDesc').value;
+  
+  ws.send(JSON.stringify({
+    type: 'SUBMIT_TASK',
+    taskType: taskType,
+    description: description
+  }));
+  
+  document.getElementById('taskDesc').value = '';
+  addSystemMessage(`📋 Task submitted: ${description.substring(0, 50)}...`);
+}
+
+function addTaskToQueue(task) {
+  const queue = document.getElementById('taskQueue');
+  
+  const taskTypes = {
+    code: '💻 Code',
+    debug: '🐛 Debug',
+    research: '🔍 Research',
+    write: '✍️ Write',
+    analyze: '📊 Analyze',
+    design: '🎨 Design'
+  };
+  
+  queue.innerHTML = `
+    <div class="task-item" id="task-${task.id}">
+      <div style="font-weight: 700; margin-bottom: 5px;">${task.description.substring(0, 50)}...</div>
+      <div style="color: var(--text-dim); font-size: 0.85em; margin-bottom: 10px;">${taskTypes[task.type]}</div>
+      <div class="task-progress">
+        <div class="spinner"></div>
+        Waiting for agents...
+      </div>
+    </div>
+  `;
+}
+
+function updateTaskWithAgents(taskId, agentList) {
+  const taskEl = document.getElementById(`task-${taskId}`);
+  if (taskEl) {
+    const progress = taskEl.querySelector('.task-progress');
+    progress.innerHTML = `
+      <div class="spinner"></div>
+      ${agentList.map(a => a.name).join(', ')} collaborating...
+    `;
+  }
+  
+  addSystemMessage(`👥 Assigned: ${agentList.map(a => a.name).join(', ')}`);
+}
+
+function addChatMessage(agent, message, timestamp) {
+  const chat = document.getElementById('chatMessages');
+  const time = new Date(timestamp).toLocaleTimeString();
+  
+  if (chat.querySelector('.empty-state')) {
+    chat.innerHTML = '';
+  }
+  
+  const emojis = {
+    'architect': '🏗️',
+    'coder': '💻',
+    'researcher': '🔍'
+  };
+  
+  const msg = document.createElement('div');
+  msg.className = 'message';
+  msg.innerHTML = `
+    <div class="message-avatar">${emojis[agent.specialty] || '🤖'}</div>
+    <div class="message-content">
+      <div class="message-header">
+        <div class="message-author">${agent.name}</div>
+        <div class="message-time">${time}</div>
+      </div>
+      <div class="message-text">${message}</div>
+    </div>
+  `;
+  
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+  
+  totalMessages++;
+  document.getElementById('totalMessages').textContent = totalMessages;
+}
+
+function addSystemMessage(message) {
+  const chat = document.getElementById('chatMessages');
+  
+  if (chat.querySelector('.empty-state')) {
+    chat.innerHTML = '';
+  }
+  
+  const time = new Date().toLocaleTimeString();
+  const msg = document.createElement('div');
+  msg.className = 'message';
+  msg.innerHTML = `
+    <div class="message-avatar">🤖</div>
+    <div class="message-content">
+      <div class="message-header">
+        <div class="message-author">System</div>
+        <div class="message-time">${time}</div>
+      </div>
+      <div class="message-text">${message}</div>
+    </div>
+  `;
+  
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function completeTask(taskId, deliverable, duration) {
+  tasksCompleted++;
+  const seconds = Math.floor(duration / 1000);
+  
+  document.getElementById('tasksCompleted').textContent = tasksCompleted;
+  document.getElementById('avgTime').textContent = seconds + 's';
+  
+  // Clear queue
+  document.getElementById('taskQueue').innerHTML = '<div class="empty-state">No active tasks</div>';
+  
+  // Show deliverable
+  document.getElementById('outputPanel').innerHTML = `
+    <div style="color: var(--success); font-weight: 600; margin-bottom: 15px;">✅ Task Complete (${seconds}s)</div>
+    <pre>${deliverable}</pre>
+  `;
+  
+  addSystemMessage(`✅ Task completed in ${seconds} seconds!`);
+}
+
+// Connect on page load
+connect();
+</script>
+
+</body>
+</html>
